@@ -15,6 +15,7 @@ public class Color {
         this.alpha = alpha;
     }
 
+    public Color(String name, int hex, float alpha) {
         this.name = name;
         this.red = (hex >> 16) & 0xFF;
         this.green = (hex >> 8) & 0xFF;

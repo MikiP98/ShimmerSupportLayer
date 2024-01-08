@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 import static io.github.mikip98.ShimmerSupportLayer.LOGGER;
 
-public class Automation {
+public class AutomationClient {
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
 //		FabricClientCommandSource source = context.getSource();
 //

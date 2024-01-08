@@ -148,6 +148,43 @@ public class SupportedMods {
         betternetherLightSourceBlocks.add(new LightSource("golden_lumabus_seed", "golden_lumabus_seed_weight_average_color", 9));
         supportedMods.add(new SupportedMod("betternether", "betternether", "better-nether", betternetherColors, betternetherLightSourceBlocks, null));
 
+        // Mod ID: betterend
+        ArrayList<Color> betterendColors = new ArrayList<>();
+        ArrayList<LightSource> betterendLightSourceBlocks = new ArrayList<>();
+        betterendColors.add(new Color("mossy_glowshroom_fur_weight_average_color", 100, 205, 255, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("mossy_glowshroom_fur", "mossy_glowshroom_fur_weight_average_color", 15));
+        betterendColors.add(new Color("end_lotus_flower_weight_average_color", 245, 150, 226, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("end_lotus_flower", "end_lotus_flower_weight_average_color", 15));
+        betterendColors.add(new Color("creeping_moss_weight_average_color", 215, 231, 244, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("creeping_moss", "creeping_moss_weight_average_color", 11));
+        betterendColors.add(new Color("blue_vine_lantern_weight_average_color", 127, 225, 252, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("blue_vine_lantern", "blue_vine_lantern_weight_average_color", 15));
+        betterendColors.add(new Color("blue_vine_fur_weight_average_color", 80, 205, 250, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("blue_vine_fur", "blue_vine_fur_weight_average_color", 15));
+        betterendColors.add(new Color("glowing_pillar_luminophor_weight_average_color", 255, 159, 57, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("glowing_pillar_luminophor", "glowing_pillar_luminophor_weight_average_color", 15));
+        betterendColors.add(new Color("amaranita_lantern_weight_average_color", 154, 219, 199, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("amaranita_lantern", "amaranita_lantern_weight_average_color", 15));
+        betterendColors.add(new Color("amaranita_fur_weight_average_color", 181, 233, 215, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("amaranita_fur", "amaranita_fur_weight_average_color", 15));
+        betterendColors.add(new Color("neon_cactus_stairs_weight_average_color", 123, 176, 202, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("neon_cactus_stairs", "neon_cactus_stairs_weight_average_color", 15));
+        betterendColors.add(new Color("neon_cactus_slab_weight_average_color", 123, 176, 202, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("neon_cactus_slab", "neon_cactus_slab_weight_average_color", 15));
+        betterendColors.add(new Color("cave_pumpkin_weight_average_color", 214, 177, 153, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("cave_pumpkin", "cave_pumpkin_weight_average_color", 15));
+        betterendColors.add(new Color("pond_anemone_weight_average_color", 221, 185, 163, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("pond_anemone", "pond_anemone_weight_average_color", 13));
+        betterendColors.add(new Color("aurora_crystal_weight_average_color", 209, 229, 238, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("aurora_crystal", "aurora_crystal_weight_average_color", 15));
+        betterendColors.add(new Color("smaragdant_crystal_shard_weight_average_color", 0, 201, 150, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("smaragdant_crystal_shard", "smaragdant_crystal_shard_weight_average_color", 15));
+        betterendColors.add(new Color("smaragdant_crystal_weight_average_color", 0, 194, 147, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("smaragdant_crystal", "smaragdant_crystal_weight_average_color", 15));
+        betterendColors.add(new Color("budding_smaragdant_crystal_weight_average_color", 0, 178, 143, Config.auto_alpha));
+        betterendLightSourceBlocks.add(new LightSource("budding_smaragdant_crystal", "budding_smaragdant_crystal_weight_average_color", 15));
+        supportedMods.add(new SupportedMod("betterend", "betterend", "better-end", betterendColors, betterendLightSourceBlocks, null));
+
         return supportedMods;
     }
 }

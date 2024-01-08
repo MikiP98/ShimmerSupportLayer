@@ -1,6 +1,6 @@
 # Ignore contents of assets folder (but keep the folder)
 assets/*
-!assets/
+!assets/minecraft
 
 # Ignore texture_reader > VanillaDefault_1.20.4 folder and its contents
 texture_reader/VanillaDefault_1.20.4/

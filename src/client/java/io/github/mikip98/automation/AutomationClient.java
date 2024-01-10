@@ -10,6 +10,8 @@ import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.registry.Registries;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -24,130 +26,41 @@ import static io.github.mikip98.ShimmerSupportLayer.LOGGER;
 
 public class AutomationClient {
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
-//		FabricClientCommandSource source = context.getSource();
-//
-//        assert MinecraftClient.getInstance().player != null;
-//        MinecraftClient.getInstance().player.sendMessage(Text.of("Executing /shimmer dumpLightBlockStates"), false);
-//		MinecraftClient.getInstance().player.getCommandSource().sendFeedback(() -> Text.of("/shimmer dumpLightBlockStates"), false);
-//		return 1;
-
-//		FabricClientCommandSource source = context.getSource();
-        assert MinecraftClient.getInstance().player != null;
-        MinecraftClient.getInstance().player.sendMessage(Text.of("works"), false);
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Started the dump generation..."), false);
+        }
 
         StringBuilder dumpCSVString = new StringBuilder();
 
         for (Block block : Registries.BLOCK) {
             // Check if the block emits light
             BlockState blockState = block.getDefaultState();
-            if (blockState.getLuminance() > 0) {
-                // Extract texture and calculate average color
-                // Save the information to your file
-//				raw.append(blockState.getBlock()).append(" ").append(blockState.getLuminance()).append("\n");
 
-//				BlockTextureExtractor.getColor(blockState);
+            BooleanProperty litProperty = Properties.LIT;
+            boolean hasLitProperty = blockState.getProperties().contains(litProperty);
+            boolean isLit = false;
+            // Check if the block has the "lit" property
+            if (hasLitProperty) {
+                isLit = blockState.get(litProperty);
+            }
 
-//				LOGGER.info("blockState: " + blockState.getBlock());
-                BlockInfo blockInfo = parseBlockString(blockState.getBlock().toString());
-
-                assert blockInfo != null;
-                String modID = blockInfo.getModId();
-                String blockID = blockInfo.getBlockId();
-
-                String entry = modID + ';' + blockID + ';' + blockState.getLuminance() + '\n';
+            String entry = generateEntry(blockState);
+            if (entry != null) {
                 dumpCSVString.append(entry);
-
-
-//				Identifier blockTexture = new Identifier(modID, "block/" + blockID);
-
-                // Get Minecraft client instance
-                MinecraftClient minecraftClient = MinecraftClient.getInstance();
-
-                Sprite sprite = MinecraftClient.getInstance().getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE).apply(new Identifier(modID, "block/" + blockID));
-                LOGGER.info("sprite: " + sprite);
-
-                // Get the Identifier of the atlas
-                Identifier atlasId = sprite.getAtlasId();
-
-                // Use MinecraftClient to get the Texture
-                AbstractTexture texture = MinecraftClient.getInstance().getTextureManager().getTexture(atlasId);
-
-                // Access pixel colors
-                int width = sprite.getX();
-                int height = sprite.getY();
-                LOGGER.info("width: " + width + ", height: " + height);
-//				int[] pixels = new int[width * height];
-
-                // Ensure the texture is loaded before accessing pixel colors
-                LOGGER.info("texture class: " + texture.getClass().toString());
-//				if (texture instanceof NativeImageBackedTexture) {
-////				if (true) {
-//					NativeImageBackedTexture imageTexture = (NativeImageBackedTexture) texture;
-////					SpriteAtlasTexture imageTexture = (SpriteAtlasTexture) texture;
-//					NativeImage nativeImage = imageTexture.getImage();
-//
-////					nativeImage.getPixels().getRGB(0, 0, width, height, pixels, 0, width);
-//
-//					int[] pixels = nativeImage.copyPixelsRgba();
-//					int r_sum = 0, g_sum = 0, b_sum = 0;
-//					int r_weight = 0, g_weight = 0, b_weight = 0;
-//					for (int pixel : pixels) {
-//						int r = (pixel >> 16) & 0xFF;
-//						int g = (pixel >> 8) & 0xFF;
-//						int b = pixel & 0xFF;
-//						r_sum += r * r;
-//						g_sum += g * g;
-//						b_sum += b * b;
-//						r_weight += r;
-//						g_weight += g;
-//						b_weight += b;
-//					}
-//
-//					// Calculate average color
-//					int totalR = 0, totalG = 0, totalB = 0;
-//					int pixelCount = pixels.length;
-//
-//					for (int pixel : pixels) {
-//						totalR += (pixel >> 16) & 0xFF;
-//						totalG += (pixel >> 8) & 0xFF;
-//						totalB += pixel & 0xFF;
-//					}
-//
-//					int avgR = totalR / pixelCount;
-//					int avgG = totalG / pixelCount;
-//					int avgB = totalB / pixelCount;
-//
-//					// Use avgR, avgG, avgB as the average color
-//					LOGGER.info("avgR: " + avgR + ", avgG: " + avgG + ", avgB: " + avgB);
-//				}
-
-//				int[] pixels = new int[width * height];
-//				sprite.getAtlas().getTexture().getImage().getRGB(0, 0, width, height, pixels, 0, width);
-
-//				BakedModel model = minecraftClient.getBlockRenderManager().getModel(blockState);
-//
-//				for (BakedQuad quad : model.getQuads(blockState, null, null)) {
-//					int[] vertexData = quad.getVertexData();
-//					// The texture information is typically stored in the vertex data
-//					// You can extract the texture coordinates and use them to identify the texture
-//					// The exact structure of vertex data may vary based on the Minecraft version and rendering pipeline
-//
-//				}
-
-//				ModelIdentifier modelId = ModelHelper.stateModelMap.get(blockState);
-//				BakedModel model = MinecraftClient.getInstance().getBakedModelManager().getModel(modelId);
-
-
-                // Get the sprite for the given block texture
-//				SpriteAtlasTexture spriteAtlas = (SpriteAtlasTexture) minecraftClient.getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE);
-//				Sprite sprite = spriteAtlas.getSprite(blockTexture);
-//				LOGGER.info("sprite: " + sprite);
-
-                // Now you can use the sprite to get texture information
-                // For example, you can get the sprite's width and height
-
-
-                // Do whatever you need with the texture information
+            }
+            if (hasLitProperty) {
+//                LOGGER.info("blockStateLitBefore: " + blockState.get(Properties.LIT));
+                blockState = blockState.with(Properties.LIT, !isLit);
+//                LOGGER.info("blockStateLitAfter: " + blockState.get(Properties.LIT));
+                entry = generateEntry(blockState);
+                if (entry != null) {
+//                    if (dumpCSVString.length() - entry.length() > 0) {
+//                        if (entry.equals(dumpCSVString.substring(dumpCSVString.length() - entry.length()))) {
+//                            continue;
+//                        }
+//                    }
+                    dumpCSVString.append(entry);
+                }
             }
         }
 
@@ -171,7 +84,38 @@ public class AutomationClient {
             e.printStackTrace();
         }
 
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Ended the dump generation..."), false);
+        }
         return 1;
+    }
+
+    private static String generateEntry(BlockState blockState) {
+        String entry = null;
+        if (blockState.getLuminance() > 0) {
+//				LOGGER.info("blockState: " + blockState.getBlock());
+            BlockInfo blockInfo = parseBlockString(blockState.getBlock().toString());
+
+            assert blockInfo != null;
+            String modID = blockInfo.getModId();
+            String blockID = blockInfo.getBlockId();
+
+            BooleanProperty litProperty = Properties.LIT;
+            boolean isLit = false;
+            // Check if the block has the "lit" property
+            if (blockState.getProperties().contains(litProperty)) {
+                isLit = blockState.get(litProperty);
+
+                if (isLit) {
+                    entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";lit=true\n";
+                } else {
+                    entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";lit=false\n";
+                }
+            } else {
+                entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";\n";
+            }
+        }
+        return entry;
     }
 
     public static BlockInfo parseBlockString(String blockString) {

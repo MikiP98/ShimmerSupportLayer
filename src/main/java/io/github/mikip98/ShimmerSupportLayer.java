@@ -145,9 +145,24 @@ public class ShimmerSupportLayer implements ModInitializer {
 		JsonArray lightBlocks = new JsonArray();
 		for (LightSource lightSourceBlock : mod.lightSourceBlocks) {
 			JsonObject entry = new JsonObject();
-			entry.addProperty("block", mod.modId + ':' + lightSourceBlock.blockId);
+			if (lightSourceBlock.blockId.equals("lava")) {
+				entry.addProperty("fluid", mod.modId + ':' + lightSourceBlock.blockId);
+			} else {
+				entry.addProperty("block", mod.modId + ':' + lightSourceBlock.blockId);
+			}
+//			entry.addProperty("block", mod.modId + ':' + lightSourceBlock.blockId);
 			entry.addProperty("color", '#' + lightSourceBlock.colorName);
-			entry.addProperty("radius", (lightSourceBlock.radius + bias(getColor(lightSourceBlock.colorName, mod.Colors))));
+			entry.addProperty("radius", clampLight(lightSourceBlock.radius + bias(getColor(lightSourceBlock.colorName, mod.Colors))));
+			if (lightSourceBlock.extraStates != null) {
+				JsonObject extraStates = new JsonObject();
+				for (String extraState : lightSourceBlock.extraStates.split(";")) {
+					String[] extraStateSplit = extraState.split("=");
+//					LOGGER.info("extraStateSplit: " + extraStateSplit[0] + ", " + extraStateSplit[1]);
+					extraStates.addProperty(extraStateSplit[0], extraStateSplit[1]);
+				}
+//				LOGGER.info("extraStates: " + extraStates);
+				entry.add("state", extraStates);
+			}
 			lightBlocks.add(entry);
 		}
 		configJson.add("LightBlock", lightBlocks);
@@ -158,7 +173,7 @@ public class ShimmerSupportLayer implements ModInitializer {
 				JsonObject entry = new JsonObject();
 				entry.addProperty("item_id", mod.modId + ':' + lightSourceItem.blockId);
 				entry.addProperty("color", '#' + lightSourceItem.colorName);
-				entry.addProperty("radius", lightSourceItem.radius);
+				entry.addProperty("radius", clampLight(lightSourceItem.radius + bias(getColor(lightSourceItem.colorName, mod.Colors))));
 				lightItems.add(entry);
 			}
 			configJson.add("LightItem", lightItems);
@@ -190,10 +205,7 @@ public class ShimmerSupportLayer implements ModInitializer {
 	}
 
 	private static short bias(Color color) {
-		if (color == null) {
-			return 0;
-		}
-		if (Config.enableRadiusColorCompensation) {
+		if (color != null && Config.enableRadiusColorCompensation) {
 			short sum = (short) (color.red + color.green + color.blue);
 			if (sum <= 255) {
 				return 1;
@@ -202,5 +214,9 @@ public class ShimmerSupportLayer implements ModInitializer {
 			}
 		}
 		return 0;
+	}
+
+	private static int clampLight(int value) {
+		return Math.max(0, Math.min(15, value));
 	}
 }

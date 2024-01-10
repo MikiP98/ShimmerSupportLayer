@@ -219,6 +219,18 @@ def saturate(color, factor):
     return Color(*new_color)
 
 
+def check_item(mod_id, block_id):
+    item_path = f"assets/{mod_id}/models/item/{block_id}.json"
+
+    try:
+        with open(item_path, "r") as json_file:
+            json.load(json_file)
+    except FileNotFoundError:
+        return False
+
+    return True
+
+
 if __name__ == '__main__':
     search_phrases = {
         "minecraft": "jar",
@@ -252,11 +264,11 @@ if __name__ == '__main__':
     java_code = ""
 
     for mod_id, mod_data in reformatted_data.items():
-        temp_java_code = ""
+        temp_java_code = f"// Mod ID: {mod_id}\n"
 
-        temp_java_code += f"// Mod ID: {mod_id}\n"
         temp_java_code += f"ArrayList<Color> {mod_id}Colors = new ArrayList<>();\n"
         temp_java_code += f"ArrayList<LightSource> {mod_id}LightSourceBlocks = new ArrayList<>();\n"
+        temp_java_code += f"ArrayList<LightSource> {mod_id}LightSourceItems = new ArrayList<>();\n\n"
 
         for entry in mod_data["blocks"]:
             block_id, radius, extra_states = entry["block_id"], entry["radius"], entry["extra_states"]
@@ -276,6 +288,9 @@ if __name__ == '__main__':
                 temp_java_code += f"{mod_id}LightSourceBlocks.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}, \"{extra_states}\"));\n"
             else:
                 temp_java_code += f"{mod_id}LightSourceBlocks.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}));\n"
+
+            if check_item(mod_id, block_id):
+                temp_java_code += f"{mod_id}LightSourceItems.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}));\n"
 
         search_phrase = mod_id
         try:

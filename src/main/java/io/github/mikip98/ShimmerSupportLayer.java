@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.mikip98.automation.Automation;
+import io.netty.util.internal.SuppressJava6Requirement;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -124,6 +125,9 @@ public class ShimmerSupportLayer implements ModInitializer {
 	}
 
 	private static void generateSupportConfig(SupportedMod mod) {
+//		if (true) {
+//			return;
+//		}
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		Path gameDirPath = FabricLoader.getInstance().getGameDir();
 		File configFile = new File(gameDirPath + "/config/shimmer/" + mod.modId + ".json");

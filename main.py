@@ -24,12 +24,13 @@ def read_light_blocks_csv(file_path):
 
             # Iterate through rows and add data to the list
             for row in reader:
-                if len(row) == 3:
-                    mod_id, block_id, radius = row
+                if len(row) == 4:
+                    mod_id, block_id, radius, extra_states = row
                     data_list.append({
                         "mod_id": mod_id,
                         "block_id": block_id,
-                        "radius": int(radius)  # Assuming radius is a numeric value
+                        "radius": int(radius),
+                        "extra_states": extra_states
                     })
                 else:
                     print(f"Invalid row: {row}")
@@ -49,11 +50,13 @@ def reformat(data_list):
         mod_id = entry["mod_id"]
         block_id = entry["block_id"]
         radius = entry["radius"]
+        extra_states = entry["extra_states"]
 
         if mod_id not in reformatted_data:
-            reformatted_data[mod_id] = {"blocks": {}}
+            reformatted_data[mod_id] = {"blocks": []}
 
-        reformatted_data[mod_id]["blocks"][block_id] = int(radius)
+        reformatted_data[mod_id]["blocks"].append({"block_id": block_id, "radius": radius, "extra_states": extra_states})
+        # reformatted_data[mod_id]["blocks"][block_id] = int(radius)
 
     return reformatted_data
 
@@ -86,6 +89,10 @@ def get_average_color(texture_paths: list[str]):
         b_sum += b * weight
         total_weight += weight
 
+    if total_weight == 0:
+        print(f"Total weight is 0 for texture paths: {texture_paths}")
+        raise FileNotFoundError
+
     average_color = [
         int(round((r_sum / total_weight) * 255)),
         int(round((g_sum / total_weight) * 255)),
@@ -97,34 +104,87 @@ def get_average_color(texture_paths: list[str]):
 def get_color(mod_id, block_id):
     print(f"Starting to get color for block '{block_id}' in mod '{mod_id}'...")
 
-    # Construct paths
-    model_path = f"assets/{mod_id}/models/block/{block_id}.json"
+    blockstate_path = f"assets/{mod_id}/blockstates/{block_id}.json"
+    model_paths = set()
+
+    # Read the blockstate JSON
+    with open(blockstate_path, "r") as json_file:
+        blockstate_data = json.load(json_file)
+
+        if "variants" in blockstate_data:
+            for variant in blockstate_data["variants"]:
+                params = variant.split(",")
+                lit_false = False
+                for param in params:
+                    if param == "lit=false":
+                        lit_false = True
+                if lit_false:
+                    continue
+                # print(blockstate_data["variants"].get(variant))
+                # print(blockstate_data["variants"].get(variant)["model"])
+                model_module = blockstate_data["variants"].get(variant)
+                if type(model_module) is list:
+                    for element in model_module:
+                        model_paths.add(element["model"])
+                else:
+                    model_paths.add(model_module["model"])
+
+        elif "multipart" in blockstate_data:
+            for part in blockstate_data["multipart"]:
+                if "apply" in part:
+                    if type(part["apply"]) is list:
+                        for element in part["apply"]:
+                            model_paths.add(element["model"])
+                    else:
+                        model_paths.add(part["apply"]["model"])
+
+    print(f"Model paths: {model_paths}")
+
+    real_model_paths = []
+    for model_path in model_paths:
+        if model_path.startswith("block/"):
+            real_model_paths.append(f"assets/minecraft/models/{model_path}.json")
+        else:
+            other_mod_id, model_id = model_path.split(":block/")
+            real_model_paths.append(f"assets/{other_mod_id}/models/block/{model_id}.json")
+
+    # model_path = f"assets/{mod_id}/models/block/{block_id}.json"
 
     # Read the block model JSON
-    with open(model_path, "r") as json_file:
-        model_data = json.load(json_file)
+    # with open(model_path, "r") as json_file:
+    #     model_data = json.load(json_file)
 
     texture_image_paths = []
-    # Iterate through textures in the model
-    for texture_path in model_data.get("textures", {}).values():
-        if texture_path.startswith("block/"):
-            # Extract texture ID
-            texture_id = texture_path[len("block/"):]
+    # Iterate through model paths
+    for model_path in real_model_paths:
+        with open(model_path, "r") as json_file:
+            model_data = json.load(json_file)
 
-            # Form the path to the texture image
-            texture_image_paths.append(f"assets/minecraft/textures/block/{texture_id}.png")
-        else:
-            # Extract other_mod_id and texture ID
-            other_mod_id, texture_id = texture_path.split(":block/")
+        # Iterate through textures in the model
+        for texture_path in model_data.get("textures", {}).values():
+            if texture_path.startswith("block/"):
+                # Extract texture ID
+                texture_id = texture_path[len("block/"):]
 
-            # Form the path to the texture image
-            texture_image_paths.append(f"assets/{other_mod_id}/textures/block/{texture_id}.png")
+                # Form the path to the texture image
+                texture_image_paths.append(f"assets/minecraft/textures/block/{texture_id}.png")
+            else:
+                # Extract other_mod_id and texture ID
+                try:
+                    other_mod_id, texture_id = texture_path.split(":block/")
+                except ValueError:
+                    print(f"Invalid texture path: {texture_path}")
+                    continue
+
+                # Form the path to the texture image
+                texture_image_paths.append(f"assets/{other_mod_id}/textures/block/{texture_id}.png")
 
     print(f"Texture image paths: {texture_image_paths}")
     avg_r, avg_g, avg_b = get_average_color(texture_image_paths)
 
     print(f"End of block: {block_id}")
     print(f"Average color: {avg_r}, {avg_g}, {avg_b}")
+    print()
     # saturated_color = saturate(Color(avg_r, avg_g, avg_b), 1.5)
     # print(f"Saturated color: {saturated_color.r}, {saturated_color.g}, {saturated_color.b}")
     return Color(avg_r, avg_g, avg_b)
@@ -162,7 +222,8 @@ def saturate(color, factor):
 if __name__ == '__main__':
     search_phrases = {
         "minecraft": "jar",
-        "betternether": "better-nether"
+        "betternether": "better-nether",
+        "betterend": "better-end"
     }
 
     # Load the data from "light_blocks_plus_radius.csv"
@@ -197,18 +258,24 @@ if __name__ == '__main__':
         temp_java_code += f"ArrayList<Color> {mod_id}Colors = new ArrayList<>();\n"
         temp_java_code += f"ArrayList<LightSource> {mod_id}LightSourceBlocks = new ArrayList<>();\n"
 
-        for block_id, radius in mod_data["blocks"].items():
+        for entry in mod_data["blocks"]:
+            block_id, radius, extra_states = entry["block_id"], entry["radius"], entry["extra_states"]
+            # print(f"Block ID: {block_id}, Radius: {radius}, Extra states: {extra_states}")
+
             # Call the function to get the color
             try:
                 color = get_color(mod_id, block_id)
             except FileNotFoundError:
                 print(
-                    f"Model or texture not found for block '{block_id}' in mod '{mod_id}'. Or there were no valid pixels in the texture.")
+                    f"Blockstate or model not found for block '{block_id}' in mod '{mod_id}'. Or there were no valid pixels in the textures.")
                 continue
 
             temp_java_code += f"{mod_id}Colors.add(new Color(\"{block_id}_weight_average_color\", {int(color.r)}, {int(color.g)}, {int(color.b)}, Config.auto_alpha));\n"
 
-            temp_java_code += f"{mod_id}LightSourceBlocks.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}));\n"
+            if extra_states != "":
+                temp_java_code += f"{mod_id}LightSourceBlocks.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}, \"{extra_states}\"));\n"
+            else:
+                temp_java_code += f"{mod_id}LightSourceBlocks.add(new LightSource(\"{block_id}\", \"{block_id}_weight_average_color\", {radius}));\n"
 
         search_phrase = mod_id
         try:

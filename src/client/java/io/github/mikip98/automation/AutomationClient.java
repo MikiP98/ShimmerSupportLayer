@@ -68,6 +68,11 @@ public class AutomationClient {
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
         File dumpCSVFile = new File(gameDirPath + "/config/shimmer/compatibility/light_blocks_plus_radius.csv");
 
+        //  if the directory doesn't exist, then create it
+        if (!dumpCSVFile.getParentFile().exists()) {
+            dumpCSVFile.getParentFile().mkdirs();
+        }
+
         // if file doesn't exist, then create it, else overwrite it
         if (!dumpCSVFile.exists()) {
             try {

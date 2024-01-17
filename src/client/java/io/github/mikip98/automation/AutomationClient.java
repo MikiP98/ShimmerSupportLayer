@@ -26,6 +26,8 @@ import static io.github.mikip98.ShimmerSupportLayer.LOGGER;
 
 public class AutomationClient {
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
+        copyModAssets();
+
         if (MinecraftClient.getInstance().player != null) {
             MinecraftClient.getInstance().player.sendMessage(Text.of("Started the dump generation..."), false);
         }
@@ -49,9 +51,7 @@ public class AutomationClient {
                 dumpCSVString.append(entry);
             }
             if (hasLitProperty) {
-//                LOGGER.info("blockStateLitBefore: " + blockState.get(Properties.LIT));
                 blockState = blockState.with(Properties.LIT, !isLit);
-//                LOGGER.info("blockStateLitAfter: " + blockState.get(Properties.LIT));
                 entry = generateEntry(blockState);
                 if (entry != null) {
 //                    if (dumpCSVString.length() - entry.length() > 0) {
@@ -158,5 +158,13 @@ public class AutomationClient {
         public String getBlockId() {
             return blockId;
         }
+    }
+
+    private static void copyModAssets() {
+        // Get the path to the game directory
+        Path gameDirPath = FabricLoader.getInstance().getGameDir();
+        // Get the path to the mod folder
+        Path modDirPath = gameDirPath.resolve("mods");
+        LOGGER.info("modDirPath: " + modDirPath);
     }
 }

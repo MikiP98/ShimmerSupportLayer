@@ -18,7 +18,13 @@ import net.minecraft.util.Identifier;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -161,10 +167,82 @@ public class AutomationClient {
     }
 
     private static void copyModAssets() {
+        LOGGER.info("Copying mod assets...");
         // Get the path to the game directory
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
+
+        // Get the path to the "game directory" > config > shimmer > compatibility > temp
+        Path tempAssetsDirPath = gameDirPath.resolve("config").resolve("shimmer").resolve("compatibility").resolve("temp");
+        // Create "temp" directory if it doesn't exist
+        if (!tempAssetsDirPath.toFile().exists()) {
+            tempAssetsDirPath.toFile().mkdirs();
+        }
+
         // Get the path to the mod folder
         Path modDirPath = gameDirPath.resolve("mods");
         LOGGER.info("modDirPath: " + modDirPath);
+
+        // Get the folder containing the mods
+        File modDir = new File(modDirPath.toString());
+        LOGGER.info("Found '" + modDir.listFiles().length + "' mods");
+        // Iterate over all the mods
+        for (File mod : modDir.listFiles()) {
+            LOGGER.info("file: " + mod);
+
+            // Check if the mod is a jar file
+            if (mod.isFile() && mod.getName().endsWith(".jar")) {
+                // Get the path to the mod jar file
+                Path modJarPath = modDirPath.resolve(mod.getName());
+                LOGGER.info("modJarPath: " + modJarPath);
+
+                try (JarFile jar = new JarFile(modJarPath.toFile())) {
+                    Enumeration<JarEntry> entries = jar.entries();
+
+                    // Iterate through all entries in the JAR file
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+
+                        // Check if the entry is inside the "assets" folder
+                        if (entry.getName().startsWith("assets/")) {
+                            // Extract the entry to the output folder
+                            Path outputPath = tempAssetsDirPath.resolve(entry.getName());
+                            LOGGER.info("outputPath: " + outputPath);
+                            // Create the parent directories if they don't exist
+                            if (!outputPath.getParent().toFile().exists()) {
+                                outputPath.getParent().toFile().mkdirs();
+                            }
+                            Files.copy(jar.getInputStream(entry), outputPath, StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+
+//                // Get the path to the mod assets folder
+//                JarFile modJarFile = null;
+//                try {
+//                    modJarFile = new JarFile(modJarPath.toFile());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                assert modJarFile != null;
+//                modJarFile.stream().forEach(jarEntry -> {
+//                    if (jarEntry.getName().equals("assets")) {
+//                        LOGGER.info("jarEntry: " + jarEntry.getName());
+//                        jarEntry
+//                    }
+//                });
+////                Path modAssetsPath = modJarPath.resolve("assets");
+////                LOGGER.info("modAssetsPath: " + modAssetsPath);
+//
+//                // Copy the assets folder to the "temp" folder
+//                try {
+//                    org.apache.commons.io.FileUtils.copyDirectory(modAssetsPath.toFile(), tempAssetsDirPath.toFile());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+            }
+        }
     }
 }

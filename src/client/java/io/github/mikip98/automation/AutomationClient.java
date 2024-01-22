@@ -6,29 +6,25 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.Sprite;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.registry.Registries;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.github.mikip98.ShimmerSupportLayer.LOGGER;
+import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
 
 public class AutomationClient {
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
@@ -196,22 +192,42 @@ public class AutomationClient {
                 LOGGER.info("modJarPath: " + modJarPath);
 
                 try (JarFile jar = new JarFile(modJarPath.toFile())) {
+                    LOGGER.info("jar: " + jar.getName());
                     Enumeration<JarEntry> entries = jar.entries();
-
-                    // Iterate through all entries in the JAR file
                     while (entries.hasMoreElements()) {
                         JarEntry entry = entries.nextElement();
-
-                        // Check if the entry is inside the "assets" folder
                         if (entry.getName().startsWith("assets/")) {
-                            // Extract the entry to the output folder
-                            Path outputPath = tempAssetsDirPath.resolve(entry.getName());
-                            LOGGER.info("outputPath: " + outputPath);
-                            // Create the parent directories if they don't exist
-                            if (!outputPath.getParent().toFile().exists()) {
-                                outputPath.getParent().toFile().mkdirs();
+                            LOGGER.info("entry: " + entry.getName());
+
+                            // If the entry is a directory, create it
+                            // Create only the directories "blockstates", "models", "textures" and parent directories of those
+                            if (entry.isDirectory()) {
+                                LOGGER.info("entry is directory");
+                                Path outputPath = tempAssetsDirPath.resolve(entry.getName());
+
+                                // Check if entry does not contain "blockstates", "models", or "textures" and does not contain 2 '/', if so skip it
+                                if (!(entry.getName().contains("blockstates") || entry.getName().contains("models") || entry.getName().contains("textures")) && entry.getName().chars().filter(ch -> ch == '/').count() != 2) {
+                                    continue;
+                                }
+                                // If the condition is not met, create directories if don't exist
+                                if (!outputPath.toFile().exists()) {
+                                    LOGGER.info("outputPath: " + outputPath);
+                                    outputPath.toFile().mkdirs();
+                                }
+                            } else {
+                                // If the entry is a file, copy it to the output folder
+                                LOGGER.info("entry is file");
+
+                                // check if the entry is inside "blockstates", "models" or "textures" folders, if so copy it
+                                if (entry.getName().contains("blockstates") || entry.getName().contains("models") || entry.getName().contains("textures")) {
+                                    Path outputPath = tempAssetsDirPath.resolve(entry.getName());
+                                    LOGGER.info("outputPath: " + outputPath);
+                                    if (outputPath.getParent().toFile().exists()) {
+                                        Files.copy(jar.getInputStream(entry), outputPath, StandardCopyOption.REPLACE_EXISTING);
+                                    }
+                                    LOGGER.info("entry copied");
+                                }
                             }
-                            Files.copy(jar.getInputStream(entry), outputPath, StandardCopyOption.REPLACE_EXISTING);
                         }
                     }
                 } catch (IOException e) {
@@ -219,26 +235,36 @@ public class AutomationClient {
                     throw new RuntimeException(e);
                 }
 
-//                // Get the path to the mod assets folder
-//                JarFile modJarFile = null;
+                // Get the path to the "game directory" > config > shimmer > compatibility > temp > assets
+                // Remove every empty folder inside "assets"
+                Path tempAssetsDirAssetsPath = tempAssetsDirPath.resolve("assets");
+                LOGGER.info("tempAssetsDirAssetsPath: " + tempAssetsDirAssetsPath);
+                File tempAssetsDirAssetsFile = tempAssetsDirAssetsPath.toFile();
+                File[] tempAssetsDirFolders = tempAssetsDirAssetsFile.listFiles();
+                if (tempAssetsDirFolders != null) {
+                    for (File tempAssetsDirFolder : tempAssetsDirFolders) {
+                        if (tempAssetsDirFolder.isDirectory()) {
+                            if (Objects.requireNonNull(tempAssetsDirFolder.listFiles()).length == 0) {
+                                tempAssetsDirFolder.delete();
+                                LOGGER.info("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' deleted");
+                            }
+                        }
+                    }
+                }
 //                try {
-//                    modJarFile = new JarFile(modJarPath.toFile());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                assert modJarFile != null;
-//                modJarFile.stream().forEach(jarEntry -> {
-//                    if (jarEntry.getName().equals("assets")) {
-//                        LOGGER.info("jarEntry: " + jarEntry.getName());
-//                        jarEntry
-//                    }
-//                });
-////                Path modAssetsPath = modJarPath.resolve("assets");
-////                LOGGER.info("modAssetsPath: " + modAssetsPath);
-//
-//                // Copy the assets folder to the "temp" folder
-//                try {
-//                    org.apache.commons.io.FileUtils.copyDirectory(modAssetsPath.toFile(), tempAssetsDirPath.toFile());
+//                    Files.walk(tempAssetsDirAssetsPath)
+//                            .filter(Files::isDirectory)
+//                            .filter(path -> !path.equals(tempAssetsDirAssetsPath))
+//                            .forEach(path -> {
+//                                LOGGER.info("path: " + path);
+//                                try {
+//                                    if (path.toFile().listFiles().length == 0) {
+//                                        Files.delete(path);
+//                                    }
+//                                } catch (IOException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            });
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }

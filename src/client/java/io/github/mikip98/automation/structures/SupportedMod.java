@@ -1,7 +1,9 @@
-package io.github.mikip98;
+package io.github.mikip98.automation.structures;
+
+import io.github.mikip98.automation.structures.Color;
+import io.github.mikip98.automation.structures.LightSource;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 
 public class SupportedMod {
     public final String modName;

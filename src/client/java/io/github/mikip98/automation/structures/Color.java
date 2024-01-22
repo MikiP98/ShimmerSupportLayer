@@ -1,4 +1,4 @@
-package io.github.mikip98;
+package io.github.mikip98.automation.structures;
 
 public class Color {
     public final String name;

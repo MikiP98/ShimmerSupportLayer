@@ -3,7 +3,7 @@
 ShimmerSupportLayer is a mod that add Shimmer compatibility to multiple mods.</br>
 And simplyfies the process for adding support for any given mod.
 
-## As of version 0.9.0 of SSL auto support for all mods can be generated using commnag '/generateShimmerSupport'
+## As of version 0.9.0 of SSL auto support for all mods can be generated using command '/generateShimmerSupport'
 
 *Run the command and restart the game*
 

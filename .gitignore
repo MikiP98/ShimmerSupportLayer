@@ -5,3 +5,6 @@ assets/**
 
 # Ignore texture_reader > VanillaDefault_1.20.4 folder and its contents
 texture_reader/VanillaDefault_1.20.4/
+
+light_blocks_plus_radius.csv
+vanillaDictDump.csv

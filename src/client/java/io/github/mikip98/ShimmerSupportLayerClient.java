@@ -112,7 +112,7 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 		}
 	}
 
-	private static void generateSupportConfig(SupportedMod mod) {
+	public static void generateSupportConfig(SupportedMod mod) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		Path gameDirPath = FabricLoader.getInstance().getGameDir();
 		File configFile = new File(gameDirPath + "/config/shimmer/" + mod.modId + ".json");

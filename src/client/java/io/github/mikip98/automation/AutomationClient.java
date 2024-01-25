@@ -1,6 +1,10 @@
 package io.github.mikip98.automation;
 
 import com.mojang.brigadier.context.CommandContext;
+import io.github.mikip98.automation.modSupport.AutomaticSupport;
+import io.github.mikip98.automation.modSupport.SupportedMods;
+import io.github.mikip98.automation.structures.SupportBlock;
+import io.github.mikip98.automation.structures.SupportedMod;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
@@ -17,8 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Enumeration;
-import java.util.Objects;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -28,16 +31,18 @@ import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
 
 public class AutomationClient {
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
-        copyModAssets();
+//        copyModAssets();  // TODO: Uncomment this line when the mod is released
 
+        LOGGER.info("Started the command...");
         if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.sendMessage(Text.of("Started the dump generation..."), false);
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Started the command..."), false);
+        }
+        LOGGER.info("Started the csv dump generation...");
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Started the csv dump generation..."), false);
         }
 
-        StringBuilder dumpCSVString = new StringBuilder();
-
         for (Block block : Registries.BLOCK) {
-            // Check if the block emits light
             BlockState blockState = block.getDefaultState();
 
             BooleanProperty litProperty = Properties.LIT;
@@ -48,25 +53,14 @@ public class AutomationClient {
                 isLit = blockState.get(litProperty);
             }
 
-            String entry = generateEntry(blockState);
-            if (entry != null) {
-                dumpCSVString.append(entry);
-            }
+            generateEntry(blockState);
             if (hasLitProperty) {
                 blockState = blockState.with(Properties.LIT, !isLit);
-                entry = generateEntry(blockState);
-                if (entry != null) {
-//                    if (dumpCSVString.length() - entry.length() > 0) {
-//                        if (entry.equals(dumpCSVString.substring(dumpCSVString.length() - entry.length()))) {
-//                            continue;
-//                        }
-//                    }
-                    dumpCSVString.append(entry);
-                }
+                generateEntry(blockState);
             }
         }
 
-        // Create files dump and dump2 in the game directory > config > shimmer > compatibility
+        // Create dump file in the game directory > config > shimmer > compatibility
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
         File dumpCSVFile = new File(gameDirPath + "/config/shimmer/compatibility/light_blocks_plus_radius.csv");
 
@@ -84,21 +78,55 @@ public class AutomationClient {
             }
         }
 
-        // Write debug to file
+        // Write csv to the file
         try (FileWriter writer = new FileWriter(dumpCSVFile)) {
-            writer.write(dumpCSVString.toString());
+            writer.write(ActiveBlocks.staticToString());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        LOGGER.info("Ended the csv dump generation...");
         if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.sendMessage(Text.of("Ended the dump generation..."), false);
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Ended the csv dump generation..."), false);
         }
+        LOGGER.info("Started generating full auto support...");
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Started generating full auto support..."), false);
+        }
+
+        Map<String, ArrayList<SupportBlock>> unsupportedActiveBlocksByMod = new HashMap<>();
+        // Go through every mod in ActiveBlocks and check if it's supported
+        // If it's not supported, add it to unsupportedActiveBlocksByMod
+        for (Map.Entry<String, ArrayList<SupportBlock>> entry : ActiveBlocks.getActiveBlocksByMod().entrySet()) {
+            String modId = entry.getKey();
+            ArrayList<SupportBlock> supportBlocks = entry.getValue();
+            boolean isSupported = false;
+            for (SupportedMod supportedMod : SupportedMods.getSupportedMods()) {
+                if (modId.equals(supportedMod.modId)) {
+                    isSupported = true;
+                    break;
+                }
+            }
+            if (!isSupported) {
+                LOGGER.info("Mod '" + modId + "' is not supported");
+                unsupportedActiveBlocksByMod.put(modId, supportBlocks);
+            }
+        }
+        AutomaticSupport.generateAutoSupport(unsupportedActiveBlocksByMod);
+
+        LOGGER.info("Ended generating full auto support...");
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Ended generating full auto support..."), false);
+        }
+        LOGGER.info("Ended the command...");
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.of("Ended the command..."), false);
+        }
+
         return 1;
     }
 
-    private static String generateEntry(BlockState blockState) {
-        String entry = null;
+    private static void generateEntry(BlockState blockState) {
         if (blockState.getLuminance() > 0) {
 //				LOGGER.info("blockState: " + blockState.getBlock());
             BlockInfo blockInfo = parseBlockString(blockState.getBlock().toString());
@@ -114,15 +142,14 @@ public class AutomationClient {
                 isLit = blockState.get(litProperty);
 
                 if (isLit) {
-                    entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";lit=true\n";
+                    ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"lit=true"}));
                 } else {
-                    entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";lit=false\n";
+                    ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"lit=false"}));
                 }
             } else {
-                entry = modID + ';' + blockID + ';' + blockState.getLuminance() + ";\n";
+                ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), null));
             }
         }
-        return entry;
     }
 
     public static BlockInfo parseBlockString(String blockString) {

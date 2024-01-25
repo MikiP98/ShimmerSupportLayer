@@ -1,14 +1,13 @@
 package io.github.mikip98.automation.modSupport;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
 
 public class VanillaBlocksTextureDictionary {
-    private static Map<String, double[]> BLOCK = new HashMap<>();
-    private static Map<String, double[]> BLOCKS = new HashMap<>();
+    private static final Map<String, double[]> BLOCK = new HashMap<>();
+    private static final Map<String, double[]> BLOCKS = new HashMap<>();
 
     static {
         BLOCK.put("acacia_door_bottom", new double[]{27.361255317342827, 15.350558459589816, 9.792382222853403, 37.83479445118627});

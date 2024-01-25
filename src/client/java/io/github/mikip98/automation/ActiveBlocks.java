@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ActiveBlocks {
-    private static Map<String, ArrayList<SupportBlock>> activeBlocksByMod = new HashMap<>();
+    private static final Map<String, ArrayList<SupportBlock>> activeBlocksByMod = new HashMap<>();
     public static void addActiveBlock(String modId, SupportBlock supportBlock) {
         if (activeBlocksByMod.containsKey(modId)) {
             activeBlocksByMod.get(modId).add(supportBlock);

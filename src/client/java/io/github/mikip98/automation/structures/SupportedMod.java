@@ -1,8 +1,5 @@
 package io.github.mikip98.automation.structures;
 
-import io.github.mikip98.automation.structures.Color;
-import io.github.mikip98.automation.structures.LightSource;
-
 import java.util.ArrayList;
 
 public class SupportedMod {

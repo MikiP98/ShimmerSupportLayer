@@ -6,7 +6,8 @@ public class Config {
 
     @Deprecated
     public static short auto_alpha = 170;
-
     public static short auto_block_alpha = 170;
     public static short auto_item_alpha = 170;
+
+    public static boolean debugAssetsCopy = false;
 }

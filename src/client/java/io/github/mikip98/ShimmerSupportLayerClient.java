@@ -144,7 +144,7 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 			entry.addProperty("radius", clampLight(lightSourceBlock.radius + bias(getColor(lightSourceBlock.colorName, mod.Colors))));
 			if (lightSourceBlock.extraStates != null) {
 				JsonObject extraStates = new JsonObject();
-				for (String extraState : lightSourceBlock.extraStates.split(";")) {
+				for (String extraState : lightSourceBlock.extraStates.split(",")) {
 					String[] extraStateSplit = extraState.split("=");
 //					LOGGER.info("extraStateSplit: " + extraStateSplit[0] + ", " + extraStateSplit[1]);
 					extraStates.addProperty(extraStateSplit[0], extraStateSplit[1]);

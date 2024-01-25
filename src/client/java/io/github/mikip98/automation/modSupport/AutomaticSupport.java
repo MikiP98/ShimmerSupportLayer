@@ -58,10 +58,30 @@ public class AutomaticSupport {
                 String colorName = supportBlock.blockId + "_weight_average_color";
 
                 supportedMods.get(index).Colors.add(new io.github.mikip98.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_block_alpha));
-                supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
-
                 temp_java_code.append(modId).append("Colors.add(new Color(\"").append(colorName).append("\", ").append(color[0]).append(", ").append(color[1]).append(", ").append(color[2]).append(", Config.auto_block_alpha));\n");
-                temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+
+                if (supportBlock.blockStateRules != null) {
+                    if (supportBlock.blockStateRules.length > 0) {
+                        StringBuilder blockStateRulesString = new StringBuilder();
+                        for (String blockStateRule : supportBlock.blockStateRules) {
+                            blockStateRulesString.append(blockStateRule).append(',');
+                        }
+                        blockStateRulesString = new StringBuilder(blockStateRulesString.substring(0, blockStateRulesString.length() - 1));
+                        supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius, blockStateRulesString.toString()));
+                        temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append(", \"").append(blockStateRulesString).append("\"));\n");
+                    } else {
+                        supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
+                        temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+                    }
+                } else {
+                    supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
+                    temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+                }
+
+                if (checkItem(modId, supportBlock.blockId)) {
+                    supportedMods.get(index).lightSourceItems.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
+                    temp_java_code.append(modId).append("LightSourceItems.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+                }
             }
 
             String searchPhrase = searchPhrases.getOrDefault(modId, modId);
@@ -94,6 +114,12 @@ public class AutomaticSupport {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static boolean checkItem(String modId, String blockId) {
+        Path gameDirPath = FabricLoader.getInstance().getGameDir();
+        Path itemModelPath = Paths.get(gameDirPath + "/config/shimmer/compatibility/temp/assets/" + modId + "/models/item/" + blockId + ".json");
+        return itemModelPath.toFile().exists();
     }
 
     private static int[] getColor(String modId, String blockId) {
@@ -205,10 +231,14 @@ public class AutomaticSupport {
                         if (texturePath.startsWith("block/")) {
                             texturePaths.add("assets/minecraft/textures/" + texturePath + ".png");
                         } else {
-                            String[] texturePathParts = texturePath.split(":");
-                            String modIdPart = texturePathParts[0];
-                            String texturePathPart = texturePathParts[1];
-                            texturePaths.add("assets/" + modIdPart + "/textures/" + texturePathPart + ".png");
+                            try {
+                                String[] texturePathParts = texturePath.split(":");
+                                String modIdPart = texturePathParts[0];
+                                String texturePathPart = texturePathParts[1];
+                                texturePaths.add("assets/" + modIdPart + "/textures/" + texturePathPart + ".png");
+                            } catch (ArrayIndexOutOfBoundsException e) {
+                                LOGGER.warn("Unsplittable texture path: " + texturePath);
+                            }
                         }
                     }
                 } else {
@@ -283,7 +313,7 @@ public class AutomaticSupport {
             float a_f = ((float) a) / 255;
 
             float[] hsb = Color.RGBtoHSB(r, g, b, null);
-            float h = hsb[0];
+//            float h = hsb[0];
             float s = hsb[1];
             float v = hsb[2];
 
@@ -292,9 +322,9 @@ public class AutomaticSupport {
             double weight = Math.sqrt(r_f*r_f + g_f*g_f + b_f*b_f) * Math.pow(max_chan_value, 2) * (0.5 + (s * 0.5)) * v * a_f;
 //            double weight = Math.pow((r_f + g_f + b_f) / 3, 2) * (1 - Math.abs(0.5 - v)) * (1 - Math.abs(0.5 - s)) * max_chan_value;
 
-            r_sum += r * weight;
-            g_sum += g * weight;
-            b_sum += b * weight;
+            r_sum += r_f * weight;
+            g_sum += g_f * weight;
+            b_sum += b_f * weight;
             total_weight += weight;
         }
 
@@ -303,9 +333,9 @@ public class AutomaticSupport {
         }
 
         int[] avrageColor = {
-                (int) Math.round(r_sum / total_weight),
-                (int) Math.round(g_sum / total_weight),
-                (int) Math.round(b_sum / total_weight)
+                (int) Math.round(r_sum * 255 / total_weight),
+                (int) Math.round(g_sum * 255 / total_weight),
+                (int) Math.round(b_sum * 255 / total_weight)
         };
         return avrageColor;
     }

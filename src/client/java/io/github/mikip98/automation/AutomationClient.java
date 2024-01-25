@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
 
 public class AutomationClient {
+    @SuppressWarnings("unused")
     public static int dumpling(CommandContext<FabricClientCommandSource> context) {
 //        copyModAssets();  // TODO: Uncomment this line when the mod is released
 
@@ -69,7 +70,7 @@ public class AutomationClient {
             dumpCSVFile.getParentFile().mkdirs();
         }
 
-        // if file doesn't exist, then create it, else overwrite it
+        // if the file doesn't exist, then create it, else overwrite it
         if (!dumpCSVFile.exists()) {
             try {
                 dumpCSVFile.createNewFile();
@@ -112,7 +113,11 @@ public class AutomationClient {
                 unsupportedActiveBlocksByMod.put(modId, supportBlocks);
             }
         }
-        AutomaticSupport.generateAutoSupport(unsupportedActiveBlocksByMod);
+        if (!unsupportedActiveBlocksByMod.isEmpty()) {
+            copyModAssets();
+            AutomaticSupport.generateAutoSupport(unsupportedActiveBlocksByMod);
+            deleteModAssets();
+        }
 
         LOGGER.info("Ended generating full auto support...");
         if (MinecraftClient.getInstance().player != null) {
@@ -131,15 +136,14 @@ public class AutomationClient {
 //				LOGGER.info("blockState: " + blockState.getBlock());
             BlockInfo blockInfo = parseBlockString(blockState.getBlock().toString());
 
-            assert blockInfo != null;
-            String modID = blockInfo.getModId();
-            String blockID = blockInfo.getBlockId();
+            if (blockInfo == null) return;
+            String modID = blockInfo.modId();
+            String blockID = blockInfo.blockId();
 
             BooleanProperty litProperty = Properties.LIT;
-            boolean isLit = false;
             // Check if the block has the "lit" property
             if (blockState.getProperties().contains(litProperty)) {
-                isLit = blockState.get(litProperty);
+                boolean isLit = blockState.get(litProperty);
 
                 if (isLit) {
                     ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"lit=true"}));
@@ -168,26 +172,11 @@ public class AutomationClient {
         }
 
         // Return null if the input string doesn't match the expected format
+        LOGGER.error("Block string '" + blockString + "' doesn't match the expected format");
         return null;
     }
 
-    static class BlockInfo {
-        private final String modId;
-        private final String blockId;
-
-        public BlockInfo(String modId, String blockId) {
-            this.modId = modId;
-            this.blockId = blockId;
-        }
-
-        public String getModId() {
-            return modId;
-        }
-
-        public String getBlockId() {
-            return blockId;
-        }
-    }
+    private record BlockInfo(String modId, String blockId) {}
 
     private static void copyModAssets() {
         LOGGER.info("Copying mod assets...");
@@ -232,11 +221,11 @@ public class AutomationClient {
                                 LOGGER.info("entry is directory");
                                 Path outputPath = tempAssetsDirPath.resolve(entry.getName());
 
-                                // Check if entry does not contain "blockstates", "models", or "textures" and does not contain 2 '/', if so skip it
+                                // Check if entry does not contain "blockstates", "models", or "textures" and does not contain 2 '/', if so, skip it
                                 if (!(entry.getName().contains("blockstates") || entry.getName().contains("models") || entry.getName().contains("textures")) && entry.getName().chars().filter(ch -> ch == '/').count() != 2) {
                                     continue;
                                 }
-                                // If the condition is not met, create directories if don't exist
+                                // If the condition is not met, create directories if they don't exist
                                 if (!outputPath.toFile().exists()) {
                                     LOGGER.info("outputPath: " + outputPath);
                                     outputPath.toFile().mkdirs();
@@ -272,8 +261,11 @@ public class AutomationClient {
                     for (File tempAssetsDirFolder : tempAssetsDirFolders) {
                         if (tempAssetsDirFolder.isDirectory()) {
                             if (Objects.requireNonNull(tempAssetsDirFolder.listFiles()).length == 0) {
-                                tempAssetsDirFolder.delete();
-                                LOGGER.info("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' deleted");
+                                if (tempAssetsDirFolder.delete()) {
+                                    LOGGER.info("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' deleted");
+                                } else {
+                                    LOGGER.error("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' NOT deleted");
+                                }
                             }
                         }
                     }
@@ -297,5 +289,49 @@ public class AutomationClient {
 //                }
             }
         }
+    }
+
+    private static void deleteModAssets() {
+        LOGGER.info("Deleting mod assets...");
+        // Get the path to the game directory
+        Path gameDirPath = FabricLoader.getInstance().getGameDir();
+
+        // Get the path to the "game directory" > config > shimmer > compatibility > temp
+        Path tempAssetsDirPath = gameDirPath.resolve("config").resolve("shimmer").resolve("compatibility").resolve("temp");
+
+        // Delete the "temp" directory
+        File tempAssetsDirFile = tempAssetsDirPath.toFile();
+        if (deleteFolder(tempAssetsDirFile)) {
+            LOGGER.info("tempAssets folder deleted");
+        } else {
+            LOGGER.error("tempAssets folder NOT deleted");
+        }
+    }
+    private static boolean deleteFolder(File folder) {
+        if (folder.exists()) {
+            File[] files = folder.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        // Recursive call for subdirectories
+                        if (!deleteFolder(file)) {
+                            LOGGER.warn("Unable to delete all files");
+                            return false; // Unable to delete all files
+                        }
+                    } else {
+                        // Delete files in the folder
+                        if (!file.delete()) {
+                            LOGGER.warn("Unable to delete a file '" + file.getName() + "'");
+                            return false; // Unable to delete file
+                        }
+                    }
+                }
+            }
+
+            // Delete the empty folder
+            return folder.delete();
+        }
+
+        return false; // Folder doesn't exist
     }
 }

@@ -19,4 +19,13 @@ public class SupportedMods {
 
         return supportedMods;
     }
+
+    public static ArrayList<SupportedMod> getSSLSupportedMods() {
+        ArrayList<SupportedMod> supportedMods = new ArrayList<>();
+
+        supportedMods.addAll(HandMadeSupport.getSupportedMods());
+        supportedMods.addAll(SemiAutomaticSupport.getSupportedMods());
+
+        return supportedMods;
+    }
 }

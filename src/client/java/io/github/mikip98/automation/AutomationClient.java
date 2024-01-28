@@ -5,6 +5,7 @@ import io.github.mikip98.automation.modSupport.AutomaticSupport;
 import io.github.mikip98.automation.modSupport.SupportedMods;
 import io.github.mikip98.automation.structures.SupportBlock;
 import io.github.mikip98.automation.structures.SupportedMod;
+import io.github.mikip98.config.Config;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
@@ -192,33 +193,33 @@ public class AutomationClient {
 
         // Get the path to the mod folder
         Path modDirPath = gameDirPath.resolve("mods");
-        LOGGER.info("modDirPath: " + modDirPath);
+        dLog("modDirPath: " + modDirPath);
 
         // Get the folder containing the mods
         File modDir = new File(modDirPath.toString());
-        LOGGER.info("Found '" + modDir.listFiles().length + "' mods");
+        dLog("Found '" + modDir.listFiles().length + "' mods");
         // Iterate over all the mods
         for (File mod : modDir.listFiles()) {
-            LOGGER.info("file: " + mod);
+            dLog("file: " + mod);
 
             // Check if the mod is a jar file
             if (mod.isFile() && mod.getName().endsWith(".jar")) {
                 // Get the path to the mod jar file
                 Path modJarPath = modDirPath.resolve(mod.getName());
-                LOGGER.info("modJarPath: " + modJarPath);
+                dLog("modJarPath: " + modJarPath);
 
                 try (JarFile jar = new JarFile(modJarPath.toFile())) {
-                    LOGGER.info("jar: " + jar.getName());
+                    dLog("jar: " + jar.getName());
                     Enumeration<JarEntry> entries = jar.entries();
                     while (entries.hasMoreElements()) {
                         JarEntry entry = entries.nextElement();
                         if (entry.getName().startsWith("assets/")) {
-                            LOGGER.info("entry: " + entry.getName());
+                            dLog("entry: " + entry.getName());
 
                             // If the entry is a directory, create it
                             // Create only the directories "blockstates", "models", "textures" and parent directories of those
                             if (entry.isDirectory()) {
-                                LOGGER.info("entry is directory");
+                                dLog("entry is directory");
                                 Path outputPath = tempAssetsDirPath.resolve(entry.getName());
 
                                 // Check if entry does not contain "blockstates", "models", or "textures" and does not contain 2 '/', if so, skip it
@@ -227,21 +228,21 @@ public class AutomationClient {
                                 }
                                 // If the condition is not met, create directories if they don't exist
                                 if (!outputPath.toFile().exists()) {
-                                    LOGGER.info("outputPath: " + outputPath);
+                                    dLog("outputPath: " + outputPath);
                                     outputPath.toFile().mkdirs();
                                 }
                             } else {
                                 // If the entry is a file, copy it to the output folder
-                                LOGGER.info("entry is file");
+                                dLog("entry is file");
 
                                 // check if the entry is inside "blockstates", "models" or "textures" folders, if so copy it
                                 if (entry.getName().contains("blockstates") || entry.getName().contains("models") || entry.getName().contains("textures")) {
                                     Path outputPath = tempAssetsDirPath.resolve(entry.getName());
-                                    LOGGER.info("outputPath: " + outputPath);
+                                    dLog("outputPath: " + outputPath);
                                     if (outputPath.getParent().toFile().exists()) {
                                         Files.copy(jar.getInputStream(entry), outputPath, StandardCopyOption.REPLACE_EXISTING);
                                     }
-                                    LOGGER.info("entry copied");
+                                    dLog("entry copied");
                                 }
                             }
                         }
@@ -254,7 +255,7 @@ public class AutomationClient {
                 // Get the path to the "game directory" > config > shimmer > compatibility > temp > assets
                 // Remove every empty folder inside "assets"
                 Path tempAssetsDirAssetsPath = tempAssetsDirPath.resolve("assets");
-                LOGGER.info("tempAssetsDirAssetsPath: " + tempAssetsDirAssetsPath);
+                dLog("tempAssetsDirAssetsPath: " + tempAssetsDirAssetsPath);
                 File tempAssetsDirAssetsFile = tempAssetsDirAssetsPath.toFile();
                 File[] tempAssetsDirFolders = tempAssetsDirAssetsFile.listFiles();
                 if (tempAssetsDirFolders != null) {
@@ -262,9 +263,9 @@ public class AutomationClient {
                         if (tempAssetsDirFolder.isDirectory()) {
                             if (Objects.requireNonNull(tempAssetsDirFolder.listFiles()).length == 0) {
                                 if (tempAssetsDirFolder.delete()) {
-                                    LOGGER.info("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' deleted");
+                                    dLog("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' deleted");
                                 } else {
-                                    LOGGER.error("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' NOT deleted");
+                                    dLog("tempAssetsDirFolder '" + tempAssetsDirFolder.getName() + "' NOT deleted");
                                 }
                             }
                         }
@@ -289,6 +290,7 @@ public class AutomationClient {
 //                }
             }
         }
+        LOGGER.info("Finished copying mod assets");
     }
 
     private static void deleteModAssets() {
@@ -333,5 +335,9 @@ public class AutomationClient {
         }
 
         return false; // Folder doesn't exist
+    }
+
+    private static void dLog(String message) {
+        if (Config.debugAssetsCopy) LOGGER.info(message);
     }
 }

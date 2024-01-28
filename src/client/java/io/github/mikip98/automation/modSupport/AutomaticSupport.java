@@ -42,6 +42,7 @@ public class AutomaticSupport {
 
         for (Map.Entry<String, ArrayList<SupportBlock>> entry : activeBlocksByMod.entrySet()) {
             String modId = entry.getKey();
+            LOGGER.info("Generating support for mod '" + modId + '\'');
 
             supportedMods.add(new SupportedMod(modId, modId, searchPhrases.getOrDefault(modId, modId), new ArrayList<>(), new ArrayList<>(), new ArrayList<>()));
 
@@ -52,9 +53,9 @@ public class AutomaticSupport {
             temp_java_code.append("ArrayList<LightSource> ").append(modId).append("LightSourceItems = new ArrayList<>();\n\n");
 
             for (SupportBlock supportBlock : entry.getValue()) {
-                LOGGER.info("Generating support for '" + supportBlock.blockId + "' in mod '" + modId + '\'');
+                dLog("Generating support for '" + supportBlock.blockId + "' in mod '" + modId + '\'');
                 int[] color = getColor(modId, supportBlock.blockId);
-                LOGGER.info("Color - r: " + color[0] + ", g: " + color[1] + ", b: " + color[2]);
+                dLog("Color - r: " + color[0] + ", g: " + color[1] + ", b: " + color[2]);
                 String colorName = supportBlock.blockId + "_weight_average_color";
 
                 supportedMods.get(index).Colors.add(new io.github.mikip98.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_block_alpha));
@@ -114,6 +115,8 @@ public class AutomaticSupport {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        LOGGER.info("Automatic support generation finished");
     }
 
     private static boolean checkItem(String modId, String blockId) {
@@ -123,7 +126,7 @@ public class AutomaticSupport {
     }
 
     private static int[] getColor(String modId, String blockId) {
-        LOGGER.info("Getting color for '" + blockId + "' in mod '" + modId + '\'');
+        dLog("Getting color for '" + blockId + "' in mod '" + modId + '\'');
 
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
         Path blockstatePath = Paths.get(gameDirPath + "/config/shimmer/compatibility/temp/assets/" + modId + "/blockstates/" + blockId + ".json");
@@ -133,57 +136,57 @@ public class AutomaticSupport {
         // Read the blockstate JSON
         try (FileReader reader = new FileReader(String.valueOf(blockstatePath))) {
             JSONObject blockstateData = new JSONObject(new JSONTokener(reader));
-            LOGGER.info("Blockstate JSON: " + blockstateData);
+            dLog("Blockstate JSON: " + blockstateData);
 
             Set<String> keys = blockstateData.keySet();
-            LOGGER.info("Keys: " + keys);
+            dLog("Keys: " + keys);
 
             if (keys.contains("variants")) {
-                LOGGER.info("Blockstate type: 'variants'");
-                LOGGER.info("Type of variants: " + blockstateData.get("variants").getClass().getName());
+                dLog("Blockstate type: 'variants'");
+                dLog("Type of variants: " + blockstateData.get("variants").getClass().getName());
                 JSONObject variants = (JSONObject) blockstateData.get("variants");
                 Set<String> variantsKeys = variants.keySet();
-                LOGGER.info("Keys: " + variantsKeys);
+                dLog("Keys: " + variantsKeys);
                 for (String key: variantsKeys) {
-                    LOGGER.info("Key: " + key);
+                    dLog("Key: " + key);
                     String[] keyParts = key.split(",");
                     boolean addModelPath = true;
                     for (String keyPart : keyParts) {
 //                        LOGGER.info("Key part: " + keyPart);
                         if (keyPart.equals("lit=false")) {
-                            LOGGER.info("Key part is 'lit=false'");
+                            dLog("Key part is 'lit=false'");
                             addModelPath = false;
                         }
                     }
                     if (addModelPath) {
                         Object modelModule = variants.get(key);
                         if (modelModule instanceof JSONArray) {
-                            LOGGER.info("Model module is JSONArray");
+                            dLog("Model module is JSONArray");
                             for (Object elementObj : (JSONArray) modelModule) {
                                 JSONObject element = (JSONObject) elementObj;
                                 modelPaths.add((String) element.get("model"));
                             }
                         } else {
-                            LOGGER.info("Model module is JSONObject");
+                            dLog("Model module is JSONObject");
                             modelPaths.add((String) ((JSONObject) modelModule).get("model"));
                         }
                     }
                 }
 
             } else if (keys.contains("multipart")) {
-                LOGGER.info("Blockstate type: 'multipart'");
+                dLog("Blockstate type: 'multipart'");
                 JSONArray multipart = (JSONArray) blockstateData.get("multipart");
                 for (Object partObj : multipart) {
                     JSONObject part = (JSONObject) partObj;
                     Object apply = part.get("apply");
                     if (apply instanceof JSONArray) {
-                        LOGGER.info("Apply is JSONArray");
+                        dLog("Apply is JSONArray");
                         for (Object elementObj : (JSONArray) apply) {
                             JSONObject element = (JSONObject) elementObj;
                             modelPaths.add((String) element.get("model"));
                         }
                     } else {
-                        LOGGER.info("Apply is JSONObject");
+                        dLog("Apply is JSONObject");
                         modelPaths.add((String) ((JSONObject) apply).get("model"));
                     }
                 }
@@ -194,7 +197,7 @@ public class AutomaticSupport {
             e.printStackTrace();
         }
 
-        LOGGER.info("Model paths: " + modelPaths);
+        dLog("Model paths: " + modelPaths);
 
         // Convert minecraft paths to real relative paths
         Set<String> realModelPaths = new HashSet<>();
@@ -209,21 +212,21 @@ public class AutomaticSupport {
             }
         }
 
-        LOGGER.info("Real model paths: " + realModelPaths);
+        dLog("Real model paths: " + realModelPaths);
 
         // Read the model JSONs and extract textures paths
         Set<String> texturePaths = new HashSet<>();
 
         for (String realModelPath : realModelPaths) {
             Path modelPath = Paths.get(gameDirPath + "/config/shimmer/compatibility/temp/" + realModelPath);
-            LOGGER.info("Model path: " + modelPath);
+            dLog("Model path: " + modelPath);
             try (FileReader reader = new FileReader(String.valueOf(modelPath))) {
                 JSONObject modelData = new JSONObject(new JSONTokener(reader));
-                LOGGER.info("Model JSON: " + modelData);
+                dLog("Model JSON: " + modelData);
                 if (modelData.keySet().contains("textures")) {
                     JSONObject textures = (JSONObject) modelData.get("textures");
                     Set<String> textureKeys = textures.keySet();
-                    LOGGER.info("Texture keys: " + textureKeys);
+                    dLog("Texture keys: " + textureKeys);
                     for (String textureKey : textureKeys) {
                         String texturePath = (String) textures.get(textureKey);
 
@@ -250,7 +253,7 @@ public class AutomaticSupport {
             }
         }
 
-        LOGGER.info("Texture paths: " + texturePaths);
+        dLog("Texture paths: " + texturePaths);
         return extructColorFromTextures(texturePaths);
     }
 
@@ -269,7 +272,7 @@ public class AutomaticSupport {
             if (texturePath.startsWith("assets/minecraft")) {
 //                String newPath = texturePath.replaceFirst("assets/minecraft/textures/", "");
                 String newPath = texturePath.substring(26);
-                LOGGER.info("New path: " + newPath);
+                dLog("New path: " + newPath);
                 double[] data = VanillaBlocksTextureDictionary.get(newPath);
                 r_sum += data[0];
                 g_sum += data[1];
@@ -279,7 +282,7 @@ public class AutomaticSupport {
             } else {
                 try {
                     String relativeTexturePath = relativeBeginningPath + texturePath;
-                    LOGGER.info("Texture path: " + relativeTexturePath);
+                    dLog("Texture path: " + relativeTexturePath);
                     BufferedImage image = ImageIO.read(new File(relativeTexturePath));
                     int width = image.getWidth();
                     int height = image.getHeight();
@@ -338,5 +341,9 @@ public class AutomaticSupport {
                 (int) Math.round(b_sum * 255 / total_weight)
         };
         return avrageColor;
+    }
+
+    private static void dLog(String message) {
+        if (Config.debugAutoSupportGeneration) LOGGER.info(message);
     }
 }

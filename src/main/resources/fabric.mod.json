@@ -15,6 +15,9 @@
 	"icon": "assets/shimmer-support-layer/icon.png",
 	"environment": "*",
 	"entrypoints": {
+		"modmenu": [
+			"io.github.mikip98.config.SSLModMenuIntegration"
+		],
 		"main": [
 			"io.github.mikip98.ShimmerSupportLayer"
 		],
@@ -33,7 +36,9 @@
 		"fabricloader": ">=0.15.3",
 		"minecraft": "~1.20.1",
 		"java": ">=17",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"modmenu": "*",
+		"cloth-config2": "*"
 	},
 	"suggests": {
 		"another-mod": "*"

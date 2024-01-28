@@ -11,6 +11,7 @@ import io.github.mikip98.automation.structures.Color;
 import io.github.mikip98.automation.structures.LightSource;
 import io.github.mikip98.automation.structures.SupportedMod;
 import io.github.mikip98.config.Config;
+import io.github.mikip98.config.ConfigParser;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -38,6 +39,8 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
 		LOGGER.info(MOD_NAME + " is initializing!");
+
+		ConfigParser.loadConfig();
 
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
 				dispatcher.register(literal("generateShimmerSupport")

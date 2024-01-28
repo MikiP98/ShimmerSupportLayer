@@ -34,7 +34,7 @@ And simplyfies the process for adding support for any given mod.
 
 1. Run Minecraft with SSL and all the mods you want to add support for. After entering a world run command *"/generateShimmerSupport"*.
 2. DONE! Now restart the game and support should be added!
-3. If you want to improve the result and mayby help develop better support by sharing the support on the projects github you need:
+3. If you want to improve the result and mayby help develop better support by sharing the support on the projects github you need to:
     1. Download Source code of SSL.
     2. Copy the content of *"java_code.txt"* file <sup>(located in *'{game directory} > config > shimmer > compatitbility'*)</sup> to *"SemiAutomaticSupport"* JAVA class <sup>(located in *'src > client > java > io > github > mikip98 > automation > modSupport > SemiAutomaticSupport.java'*)</sup>
     3. Change any values you want.

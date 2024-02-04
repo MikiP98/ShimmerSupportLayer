@@ -52,15 +52,20 @@ public class AutomaticSupport {
             temp_java_code.append("ArrayList<LightSource> ").append(modId).append("LightSourceBlocks = new ArrayList<>();\n");
             temp_java_code.append("ArrayList<LightSource> ").append(modId).append("LightSourceItems = new ArrayList<>();\n\n");
 
+            String lastColorName = "";
             for (SupportBlock supportBlock : entry.getValue()) {
                 dLog("Generating support for '" + supportBlock.blockId + "' in mod '" + modId + '\'');
                 int[] color = getColor(modId, supportBlock.blockId);
                 dLog("Color - r: " + color[0] + ", g: " + color[1] + ", b: " + color[2]);
                 String colorName = supportBlock.blockId + "_weight_average_color";
 
-                supportedMods.get(index).Colors.add(new io.github.mikip98.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_block_alpha));
-                temp_java_code.append(modId).append("Colors.add(new Color(\"").append(colorName).append("\", ").append(color[0]).append(", ").append(color[1]).append(", ").append(color[2]).append(", Config.auto_block_alpha));\n");
+                io.github.mikip98.automation.structures.Color newColor = new io.github.mikip98.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_alpha);
+                if (!newColor.name.equals(lastColorName)) {
+                    supportedMods.get(index).Colors.add(newColor);
+                    temp_java_code.append(modId).append("Colors.add(new Color(\"").append(colorName).append("\", ").append(color[0]).append(", ").append(color[1]).append(", ").append(color[2]).append(", Config.auto_alpha));\n");
+                }
 
+                boolean noBlockStateRules = false;
                 if (supportBlock.blockStateRules != null) {
                     if (supportBlock.blockStateRules.length > 0) {
                         StringBuilder blockStateRulesString = new StringBuilder();
@@ -70,19 +75,20 @@ public class AutomaticSupport {
                         blockStateRulesString = new StringBuilder(blockStateRulesString.substring(0, blockStateRulesString.length() - 1));
                         supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius, blockStateRulesString.toString()));
                         temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append(", \"").append(blockStateRulesString).append("\"));\n");
-                    } else {
-                        supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
-                        temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
-                    }
-                } else {
+                    } else noBlockStateRules = true;
+                } else noBlockStateRules = true;
+                if (noBlockStateRules) {
                     supportedMods.get(index).lightSourceBlocks.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
                     temp_java_code.append(modId).append("LightSourceBlocks.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
                 }
 
-                if (checkItem(modId, supportBlock.blockId)) {
-                    supportedMods.get(index).lightSourceItems.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
-                    temp_java_code.append(modId).append("LightSourceItems.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+                if (!newColor.name.equals(lastColorName)) {
+                    if (checkItem(modId, supportBlock.blockId)) {
+                        supportedMods.get(index).lightSourceItems.add(new LightSource(supportBlock.blockId, colorName, supportBlock.radius));
+                        temp_java_code.append(modId).append("LightSourceItems.add(new LightSource(\"").append(supportBlock.blockId).append("\", \"").append(colorName).append("\", ").append(supportBlock.radius).append("));\n");
+                    }
                 }
+                lastColorName = newColor.name;
             }
 
             String searchPhrase = searchPhrases.getOrDefault(modId, modId);
@@ -100,7 +106,7 @@ public class AutomaticSupport {
         Path javaCodePath = Paths.get(gameDirPath + "/config/shimmer/compatibility/java_code.txt");
         File javaCodeFile = new File(String.valueOf(javaCodePath));
 
-        // if file doesn't exist, then create it, else overwrite it
+        // if the file doesn't exist, then create it, else overwrite it
         if (!javaCodeFile.exists()) {
             try {
                 javaCodeFile.createNewFile();
@@ -128,6 +134,10 @@ public class AutomaticSupport {
     private static int[] getColor(String modId, String blockId) {
         dLog("Getting color for '" + blockId + "' in mod '" + modId + '\'');
 
+//        if (modId.equals("minecraft")) {
+//            Set<String> texturesPaths = VanillaBlocksBlockstateAtlas.get(blockId);
+//            return extractColorFromTextures(Objects.requireNonNullElseGet(texturesPaths, Set::of));
+//        }
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
         Path blockstatePath = Paths.get(gameDirPath + "/config/shimmer/compatibility/temp/assets/" + modId + "/blockstates/" + blockId + ".json");
 
@@ -145,17 +155,18 @@ public class AutomaticSupport {
                 dLog("Blockstate type: 'variants'");
                 dLog("Type of variants: " + blockstateData.get("variants").getClass().getName());
                 JSONObject variants = (JSONObject) blockstateData.get("variants");
-                Set<String> variantsKeys = variants.keySet();
-                dLog("Keys: " + variantsKeys);
-                for (String key: variantsKeys) {
+                Set<String> variantKeys = variants.keySet();
+                dLog("Keys: " + variantKeys);
+                for (String key : variantKeys) {
                     dLog("Key: " + key);
                     String[] keyParts = key.split(",");
                     boolean addModelPath = true;
                     for (String keyPart : keyParts) {
-//                        LOGGER.info("Key part: " + keyPart);
+                        //                        LOGGER.info("Key part: " + keyPart);
                         if (keyPart.equals("lit=false")) {
                             dLog("Key part is 'lit=false'");
                             addModelPath = false;
+                            break;
                         }
                     }
                     if (addModelPath) {
@@ -254,10 +265,10 @@ public class AutomaticSupport {
         }
 
         dLog("Texture paths: " + texturePaths);
-        return extructColorFromTextures(texturePaths);
+        return extractColorFromTextures(texturePaths);
     }
 
-    private static int[] extructColorFromTextures(Set<String> texturePaths) {
+    private static int[] extractColorFromTextures(Set<String> texturePaths) {
         Path gameDirPath = FabricLoader.getInstance().getGameDir();
         String relativeBeginningPath = gameDirPath + "/config/shimmer/compatibility/temp/";
 
@@ -273,7 +284,7 @@ public class AutomaticSupport {
 //                String newPath = texturePath.replaceFirst("assets/minecraft/textures/", "");
                 String newPath = texturePath.substring(26);
                 dLog("New path: " + newPath);
-                double[] data = VanillaBlocksTextureDictionary.get(newPath);
+                double[] data = VanillaBlocksTextureAtlas.get(newPath);
                 r_sum += data[0];
                 g_sum += data[1];
                 b_sum += data[2];
@@ -322,8 +333,7 @@ public class AutomaticSupport {
 
             float max_chan_value = Math.max(r, Math.max(g, b));
 
-            double weight = Math.sqrt(r_f*r_f + g_f*g_f + b_f*b_f) * Math.pow(max_chan_value, 2) * (0.5 + (s * 0.5)) * v * a_f;
-//            double weight = Math.pow((r_f + g_f + b_f) / 3, 2) * (1 - Math.abs(0.5 - v)) * (1 - Math.abs(0.5 - s)) * max_chan_value;
+            double weight = Math.sqrt(r_f*r_f + g_f*g_f + b_f*b_f) * Math.pow(max_chan_value, 2) * (0.25 + (s * 0.75)) * v * a_f;
 
             r_sum += r_f * weight;
             g_sum += g_f * weight;
@@ -335,12 +345,12 @@ public class AutomaticSupport {
             LOGGER.warn("Total weight is 0 for texture paths: " + texturePaths);
         }
 
-        int[] avrageColor = {
+        int[] averageColor = {
                 (int) Math.round(r_sum * 255 / total_weight),
                 (int) Math.round(g_sum * 255 / total_weight),
                 (int) Math.round(b_sum * 255 / total_weight)
         };
-        return avrageColor;
+        return averageColor;
     }
 
     private static void dLog(String message) {

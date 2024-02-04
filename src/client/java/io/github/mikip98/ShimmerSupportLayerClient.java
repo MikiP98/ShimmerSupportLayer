@@ -171,7 +171,7 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 			configJson.add("LightItem", lightItems);
 		}
 
-		// if file doesn't exist, then create it, else overwrite it
+		// if the file doesn't exist, then create it, else overwrite it
 		if (!configFile.exists()) {
 			try {
 				configFile.createNewFile();

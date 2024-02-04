@@ -5,7 +5,7 @@ import java.util.Map;
 
 import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
 
-public class VanillaBlocksTextureDictionary {
+public class VanillaBlocksTextureAtlas {
     private static final Map<String, double[]> BLOCK = new HashMap<>();
     private static final Map<String, double[]> BLOCKS = new HashMap<>();
 

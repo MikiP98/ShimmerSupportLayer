@@ -1,5 +1,6 @@
 package io.github.mikip98.automation;
 
+import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.mikip98.automation.modSupport.AutomaticSupport;
 import io.github.mikip98.automation.modSupport.SupportedMods;
@@ -13,7 +14,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.Registries;
 import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
+import net.minecraft.state.property.Property;
 import net.minecraft.text.Text;
 
 import java.io.File;
@@ -49,16 +52,34 @@ public class AutomationClient {
 
             BooleanProperty litProperty = Properties.LIT;
             boolean hasLitProperty = blockState.getProperties().contains(litProperty);
-            boolean isLit = false;
-            // Check if the block has the "lit" property
-            if (hasLitProperty) {
-                isLit = blockState.get(litProperty);
+
+            IntProperty levelProperty = null;
+            for (Property property : blockState.getProperties()) {
+                if (property.getName().equals("level")) {
+                    levelProperty = (IntProperty) property;
+                    break;
+                }
+            }
+            Collection<Integer> levels = null;
+            if (levelProperty != null) {
+                levels = levelProperty.getValues();
             }
 
-            generateEntry(blockState);
-            if (hasLitProperty) {
-                blockState = blockState.with(Properties.LIT, !isLit);
+            if (levels == null) {
                 generateEntry(blockState);
+                if (hasLitProperty) {
+                    blockState = blockState.with(Properties.LIT, !blockState.get(litProperty));
+                    generateEntry(blockState);
+                }
+            } else {
+                for (int level : levels) {
+                    blockState = blockState.with(levelProperty, level);
+                    generateEntry(blockState);
+                    if (hasLitProperty) {
+                        blockState = blockState.with(Properties.LIT, !blockState.get(litProperty));
+                        generateEntry(blockState);
+                    }
+                }
             }
         }
 
@@ -141,9 +162,29 @@ public class AutomationClient {
             String modID = blockInfo.modId();
             String blockID = blockInfo.blockId();
 
+            IntProperty levelProperty = null;
+            for (Property property : blockState.getProperties()) {
+                if (property.getName().equals("level")) {
+                    levelProperty = (IntProperty) property;
+                    break;
+                }
+            }
             BooleanProperty litProperty = Properties.LIT;
             // Check if the block has the "lit" property
-            if (blockState.getProperties().contains(litProperty)) {
+            if (levelProperty != null) {
+                int level = blockState.get(levelProperty);
+                if (blockState.getProperties().contains(litProperty)) {
+                    boolean isLit = blockState.get(litProperty);
+
+                    if (isLit) {
+                        ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"lit=true", "level=" + level}));
+                    } else {
+                        ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"lit=false", "level=" + level}));
+                    }
+                } else {
+                    ActiveBlocks.addActiveBlock(modID, new SupportBlock(blockID, (byte) blockState.getLuminance(), new String[]{"level=" + level}));
+                }
+            } else if (blockState.getProperties().contains(litProperty)) {
                 boolean isLit = blockState.get(litProperty);
 
                 if (isLit) {

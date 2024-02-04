@@ -22,4 +22,17 @@ public class Color {
         this.blue = hex & 0xFF;
         this.alpha = (int) (alpha * 255);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Color color = (Color) obj;
+//        return name.equals(color.name);
+        return red == color.red && green == color.green && blue == color.blue && alpha == color.alpha && name.equals(color.name);
+    }
 }

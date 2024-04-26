@@ -1,6 +1,7 @@
 package io.github.mikip98.automation.structures;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 public class SupportedMod {
     public final String modName;

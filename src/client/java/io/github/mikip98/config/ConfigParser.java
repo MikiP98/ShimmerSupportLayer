@@ -28,6 +28,8 @@ public class ConfigParser {
                 if (configJson != null) {
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "deleteUnusedConfigs");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "enableRadiusColorCompensation");
+                    needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "enableBloom");
+                    needsUpdating |= tryLoad(configJson, JsonElement::getAsByte, "bloomMinRadius");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_alpha");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_block_alpha");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_item_alpha");
@@ -77,6 +79,8 @@ public class ConfigParser {
         JsonObject configJson = new JsonObject();
         configJson.addProperty("deleteUnusedConfigs", Config.deleteUnusedConfigs);
         configJson.addProperty("enableRadiusColorCompensation", Config.enableRadiusColorCompensation);
+        configJson.addProperty("enableBloom", Config.enableBloom);
+        configJson.addProperty("bloomMinRadius", Config.bloomMinRadius);
         configJson.addProperty("auto_alpha", Config.auto_alpha);
         configJson.addProperty("auto_block_alpha", Config.auto_block_alpha);
         configJson.addProperty("auto_item_alpha", Config.auto_item_alpha);

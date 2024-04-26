@@ -23,6 +23,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static io.github.mikip98.automation.Util.bias;
 import static io.github.mikip98.automation.Util.clampLight;
@@ -134,7 +136,12 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 		}
 		configJson.add("ColorReference", colorReference);
 
+		JsonArray bloomJson = null;
+		if (Config.enableBloom) bloomJson = new JsonArray();
+
 		JsonArray lightBlocks = new JsonArray();
+		String lastBlockId = "";
+		String lastExtraStates = "";
 		for (LightSource lightSourceBlock : mod.lightSourceBlocks) {
 			JsonObject entry = new JsonObject();
 			if (lightSourceBlock.blockId.equals("lava")) {
@@ -156,9 +163,31 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 				entry.add("state", extraStates);
 			}
 			lightBlocks.add(entry);
+
+			if (Config.enableBloom && lightSourceBlock.radius >= Config.bloomMinRadius && !(lightSourceBlock.blockId.equals(lastBlockId) && Objects.equals(lightSourceBlock.extraStates, lastExtraStates))) {
+				JsonObject bloomEntry = new JsonObject();
+				String type = "block";
+				if (lightSourceBlock.blockId.equals("lava")) type = "fluid";
+				bloomEntry.addProperty(type, mod.modId + ':' + lightSourceBlock.blockId);
+
+				if (lightSourceBlock.extraStates != null) {
+					JsonObject extraStates = new JsonObject();
+					for (String extraState : lightSourceBlock.extraStates.split(",")) {
+						String[] extraStateSplit = extraState.split("=");
+						extraStates.addProperty(extraStateSplit[0], extraStateSplit[1]);
+					}
+					bloomEntry.add("state", extraStates);
+				}
+
+                bloomJson.add(bloomEntry);
+			}
+			lastBlockId = lightSourceBlock.blockId;
+			lastExtraStates = lightSourceBlock.extraStates;
 		}
 		configJson.add("LightBlock", lightBlocks);
+		if (Config.enableBloom) configJson.add("Bloom", bloomJson);
 
+		// Coloured light items
 		if (mod.lightSourceItems != null) {
 			JsonArray lightItems = new JsonArray();
 			for (LightSource lightSourceItem : mod.lightSourceItems) {

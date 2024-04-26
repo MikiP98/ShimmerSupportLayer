@@ -40,6 +40,20 @@ public class ConfigScreen {
                 .build()
         );
         rootCategory.addEntry(ConfigEntryBuilder.create()
+                .startBooleanToggle(Text.literal("Enable Bloom"), Config.enableBloom)
+                .setDefaultValue(true)
+                .setTooltip(Text.of("Enables bloom effect for light sources"))
+                .setSaveConsumer(value -> Config.enableBloom = value)
+                .build()
+        );
+        rootCategory.addEntry(ConfigEntryBuilder.create()
+                .startIntSlider(Text.literal("Bloom Min Radius"), Config.bloomMinRadius, 0, 255)
+                .setDefaultValue(8)
+                .setTooltip(Text.of("Minimum radius for bloom effect to be applied"))
+                .setSaveConsumer(value -> Config.bloomMinRadius = value.byteValue())
+                .build()
+        );
+        rootCategory.addEntry(ConfigEntryBuilder.create()
                 .startIntSlider(Text.literal("Universal Auto Alpha"), Config.auto_alpha, 0, 255)
                 .setDefaultValue(195)
                 .setTooltip(Text.of("Universal alpha for coloured light (both block and corresponding item)\n(It should not be used by the support, it's just a fallback)"))

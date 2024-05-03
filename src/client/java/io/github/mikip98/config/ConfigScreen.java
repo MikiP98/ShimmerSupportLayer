@@ -3,16 +3,11 @@ package io.github.mikip98.config;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
-
 public class ConfigScreen {
+    @SuppressWarnings("deprecation")
     public static Screen createScreen(Screen parentScreen) {
         ConfigParser.loadConfig();
 
@@ -47,9 +42,9 @@ public class ConfigScreen {
                 .build()
         );
         rootCategory.addEntry(ConfigEntryBuilder.create()
-                .startIntSlider(Text.literal("Bloom Min Radius"), Config.bloomMinRadius, 0, 255)
+                .startIntSlider(Text.literal("Bloom Min Light Radius"), Config.bloomMinRadius, 0, 15)
                 .setDefaultValue(8)
-                .setTooltip(Text.of("Minimum radius for bloom effect to be applied"))
+                .setTooltip(Text.of("Minimum light radius for bloom effect to be applied"))
                 .setSaveConsumer(value -> Config.bloomMinRadius = value.byteValue())
                 .build()
         );

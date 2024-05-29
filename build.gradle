@@ -2,17 +2,17 @@ plugins {
 	id 'fabric-loom' version '1.4-SNAPSHOT'
 	id 'maven-publish'
 
-	id 'com.github.johnrengelman.shadow' version '7.1.0'
+//	id 'com.github.johnrengelman.shadow' version '7.1.0'
 }
-configurations {
-    shadowImplementation.extendsFrom implementation
-}
-shadowJar {
-    configurations = [project.configurations.shadowImplementation]
-    mergeServiceFiles()
-    zip64 true
-}
-build.dependsOn shadowJar
+//configurations {
+//    shadowImplementation.extendsFrom implementation
+//}
+//shadowJar {
+//    configurations = [project.configurations.shadowImplementation]
+//    mergeServiceFiles()
+//    zip64 true
+//}
+//build.dependsOn shadowJar
 
 version = project.mod_version
 group = project.maven_group
@@ -56,6 +56,7 @@ dependencies {
 
 //	implementation group: 'org.json', name: 'json', version: '20231013'
 	implementation "org.json:json:20231013"
+	include "org.json:json:20231013"
 //	compile("org.json:json:20231013")
 //	runtime "org.json:json:20231013"
 

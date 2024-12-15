@@ -1,4 +1,4 @@
-package io.github.mikip98.config;
+package io.github.mikip98.ssl.config;
 
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -46,6 +46,13 @@ public class ConfigScreen {
                 .setDefaultValue(8)
                 .setTooltip(Text.of("Minimum light radius for bloom effect to be applied"))
                 .setSaveConsumer(value -> Config.bloomMinRadius = value.byteValue())
+                .build()
+        );
+        rootCategory.addEntry(ConfigEntryBuilder.create()
+                .startBooleanToggle(Text.literal("Do Not Split Color Reference"), Config.doNotSplitColorReference)
+                .setDefaultValue(false)
+                .setTooltip(Text.of("Do not split color reference from light block and item config definitions\n(Potential fix for some mods, Shimmer bug fix)"))
+                .setSaveConsumer(value -> Config.doNotSplitColorReference = value)
                 .build()
         );
         rootCategory.addEntry(ConfigEntryBuilder.create()

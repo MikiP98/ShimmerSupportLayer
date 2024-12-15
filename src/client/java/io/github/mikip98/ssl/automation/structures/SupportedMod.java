@@ -1,7 +1,6 @@
-package io.github.mikip98.automation.structures;
+package io.github.mikip98.ssl.automation.structures;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class SupportedMod {
     public final String modName;

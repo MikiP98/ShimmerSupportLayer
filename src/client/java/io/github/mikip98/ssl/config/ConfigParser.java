@@ -1,4 +1,4 @@
-package io.github.mikip98.config;
+package io.github.mikip98.ssl.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -12,8 +12,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Function;
 
-import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
-import static io.github.mikip98.ShimmerSupportLayerClient.MOD_ID;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.LOGGER;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.MOD_ID;
 
 public class ConfigParser {
     public static void loadConfig() {
@@ -30,6 +30,7 @@ public class ConfigParser {
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "enableRadiusColorCompensation");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "enableBloom");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsByte, "bloomMinRadius");
+                    needsUpdating |= tryLoad(configJson, JsonElement::getAsBoolean, "doNotSplitColorReference");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_alpha");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_block_alpha");
                     needsUpdating |= tryLoad(configJson, JsonElement::getAsShort, "auto_item_alpha");
@@ -81,6 +82,7 @@ public class ConfigParser {
         configJson.addProperty("enableRadiusColorCompensation", Config.enableRadiusColorCompensation);
         configJson.addProperty("enableBloom", Config.enableBloom);
         configJson.addProperty("bloomMinRadius", Config.bloomMinRadius);
+        configJson.addProperty("doNotSplitColorReference", Config.doNotSplitColorReference);
         configJson.addProperty("auto_alpha", Config.auto_alpha);
         configJson.addProperty("auto_block_alpha", Config.auto_block_alpha);
         configJson.addProperty("auto_item_alpha", Config.auto_item_alpha);

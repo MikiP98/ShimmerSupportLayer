@@ -1,6 +1,6 @@
-package io.github.mikip98.automation;
+package io.github.mikip98.ssl.automation;
 
-import io.github.mikip98.automation.structures.SupportBlock;
+import io.github.mikip98.ssl.automation.structures.SupportBlock;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,9 +1,9 @@
-package io.github.mikip98.automation.modSupport;
+package io.github.mikip98.ssl.automation.modSupport;
 
-import io.github.mikip98.automation.structures.Color;
-import io.github.mikip98.config.Config;
-import io.github.mikip98.automation.structures.LightSource;
-import io.github.mikip98.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.automation.structures.Color;
+import io.github.mikip98.ssl.automation.structures.LightSource;
+import io.github.mikip98.ssl.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.config.Config;
 
 import java.util.ArrayList;
 

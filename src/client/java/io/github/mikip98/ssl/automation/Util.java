@@ -1,7 +1,7 @@
-package io.github.mikip98.automation;
+package io.github.mikip98.ssl.automation;
 
-import io.github.mikip98.automation.structures.Color;
-import io.github.mikip98.config.Config;
+import io.github.mikip98.ssl.automation.structures.Color;
+import io.github.mikip98.ssl.config.Config;
 
 public class Util {
     public static short bias(Color color) {

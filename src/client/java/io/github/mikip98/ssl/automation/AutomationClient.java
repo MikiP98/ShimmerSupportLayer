@@ -1,12 +1,12 @@
-package io.github.mikip98.automation;
+package io.github.mikip98.ssl.automation;
 
 import com.google.common.collect.ImmutableSet;
 import com.mojang.brigadier.context.CommandContext;
-import io.github.mikip98.automation.modSupport.AutomaticSupport;
-import io.github.mikip98.automation.modSupport.SupportedMods;
-import io.github.mikip98.automation.structures.SupportBlock;
-import io.github.mikip98.automation.structures.SupportedMod;
-import io.github.mikip98.config.Config;
+import io.github.mikip98.ssl.automation.modSupport.AutomaticSupport;
+import io.github.mikip98.ssl.automation.modSupport.SupportedMods;
+import io.github.mikip98.ssl.automation.structures.SupportBlock;
+import io.github.mikip98.ssl.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.config.Config;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
@@ -31,7 +31,7 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.LOGGER;
 
 public class AutomationClient {
     @SuppressWarnings("unused")

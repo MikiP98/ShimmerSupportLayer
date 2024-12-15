@@ -1,17 +1,17 @@
-package io.github.mikip98;
+package io.github.mikip98.ssl;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.github.mikip98.automation.AutomationClient;
-import io.github.mikip98.automation.modSupport.HandMadeSupport;
-import io.github.mikip98.automation.modSupport.SemiAutomaticSupport;
-import io.github.mikip98.automation.structures.Color;
-import io.github.mikip98.automation.structures.LightSource;
-import io.github.mikip98.automation.structures.SupportedMod;
-import io.github.mikip98.config.Config;
-import io.github.mikip98.config.ConfigParser;
+import io.github.mikip98.ssl.automation.AutomationClient;
+import io.github.mikip98.ssl.automation.modSupport.HandMadeSupport;
+import io.github.mikip98.ssl.automation.modSupport.SemiAutomaticSupport;
+import io.github.mikip98.ssl.automation.structures.Color;
+import io.github.mikip98.ssl.automation.structures.LightSource;
+import io.github.mikip98.ssl.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.config.Config;
+import io.github.mikip98.ssl.config.ConfigParser;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -23,11 +23,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-import static io.github.mikip98.automation.Util.bias;
-import static io.github.mikip98.automation.Util.clampLight;
+import static io.github.mikip98.ssl.automation.Util.bias;
+import static io.github.mikip98.ssl.automation.Util.clampLight;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.loader.api.FabricLoader.getInstance;
 
@@ -36,7 +35,7 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 	public static final String MOD_NAME = "Shimmer Support Layer";
 	public static final String MOD_CAMEL = "ShimmerSupportLayer";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_CAMEL);
-
+	
 	@Override
 	public void onInitializeClient() {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
@@ -200,7 +199,15 @@ public class ShimmerSupportLayerClient implements ClientModInitializer {
 			configJson.add("LightItem", lightItems);
 		}
 
-		// if the file doesn't exist, then create it, else overwrite it
+		//Check if all the folders for the file exist
+		if (!configFile.getParentFile().exists()) {
+			if (!configFile.getParentFile().getParentFile().exists()) {
+				configFile.getParentFile().getParentFile().mkdirs();
+			}
+			configFile.getParentFile().mkdirs();
+		}
+
+		// if the file doesn't exist, then create it
 		if (!configFile.exists()) {
 			try {
 				configFile.createNewFile();

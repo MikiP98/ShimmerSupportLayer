@@ -1,4 +1,4 @@
-package io.github.mikip98.automation.modSupport;
+package io.github.mikip98.ssl.automation.modSupport;
 
 import java.util.HashMap;
 import java.util.Map;

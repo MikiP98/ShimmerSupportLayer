@@ -1,10 +1,14 @@
-package io.github.mikip98.automation.modSupport;
+package io.github.mikip98.ssl.automation.modSupport;
 
-import io.github.mikip98.automation.structures.LightSource;
-import io.github.mikip98.automation.structures.SupportBlock;
-import io.github.mikip98.automation.structures.SupportedMod;
-import io.github.mikip98.config.Config;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import io.github.mikip98.ssl.automation.structures.LightSource;
+import io.github.mikip98.ssl.automation.structures.SupportBlock;
+import io.github.mikip98.ssl.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.config.Config;
 import net.fabricmc.loader.api.FabricLoader;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -17,14 +21,10 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import javax.imageio.ImageIO;
 
-import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
-import static io.github.mikip98.ShimmerSupportLayerClient.generateSupportConfig;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.LOGGER;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.generateSupportConfig;
 
 public class AutomaticSupport {
     // This Class contains the scripts that automatically generate support for all mods.
@@ -42,7 +42,7 @@ public class AutomaticSupport {
 
         for (Map.Entry<String, ArrayList<SupportBlock>> entry : activeBlocksByMod.entrySet()) {
             String modId = entry.getKey();
-            LOGGER.info("Generating support for mod '" + modId + '\'');
+            LOGGER.info("Generating support for mod '{}'", modId);
 
             supportedMods.add(new SupportedMod(modId, modId, searchPhrases.getOrDefault(modId, modId), new ArrayList<>(), new ArrayList<>(), new ArrayList<>()));
 
@@ -59,7 +59,7 @@ public class AutomaticSupport {
                 dLog("Color - r: " + color[0] + ", g: " + color[1] + ", b: " + color[2]);
                 String colorName = supportBlock.blockId + "_weight_average_color";
 
-                io.github.mikip98.automation.structures.Color newColor = new io.github.mikip98.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_alpha);
+                io.github.mikip98.ssl.automation.structures.Color newColor = new io.github.mikip98.ssl.automation.structures.Color(colorName, color[0], color[1], color[2], Config.auto_alpha);  // TODO: fix
                 if (!newColor.name.equals(lastColorName)) {
                     supportedMods.get(index).Colors.add(newColor);
                     temp_java_code.append(modId).append("Colors.add(new Color(\"").append(colorName).append("\", ").append(color[0]).append(", ").append(color[1]).append(", ").append(color[2]).append(", Config.auto_alpha));\n");
@@ -145,7 +145,9 @@ public class AutomaticSupport {
 
         // Read the blockstate JSON
         try (FileReader reader = new FileReader(String.valueOf(blockstatePath))) {
-            JSONObject blockstateData = new JSONObject(new JSONTokener(reader));
+            Gson gson = new Gson();
+            JsonObject blockstateData = gson.fromJson(reader, JsonObject.class);
+
             dLog("Blockstate JSON: " + blockstateData);
 
             Set<String> keys = blockstateData.keySet();
@@ -154,55 +156,56 @@ public class AutomaticSupport {
             if (keys.contains("variants")) {
                 dLog("Blockstate type: 'variants'");
                 dLog("Type of variants: " + blockstateData.get("variants").getClass().getName());
-                JSONObject variants = (JSONObject) blockstateData.get("variants");
+
+                JsonObject variants = blockstateData.getAsJsonObject("variants");
+
                 Set<String> variantKeys = variants.keySet();
                 dLog("Keys: " + variantKeys);
+
                 for (String key : variantKeys) {
                     dLog("Key: " + key);
                     String[] keyParts = key.split(",");
-                    boolean addModelPath = true;
-                    for (String keyPart : keyParts) {
-                        //                        LOGGER.info("Key part: " + keyPart);
-                        if (keyPart.equals("lit=false")) {
-                            dLog("Key part is 'lit=false'");
-                            addModelPath = false;
-                            break;
-                        }
-                    }
-                    if (addModelPath) {
+
+                    if (!Arrays.asList(keyParts).contains("lit=false")) {
                         Object modelModule = variants.get(key);
-                        if (modelModule instanceof JSONArray) {
-                            dLog("Model module is JSONArray");
-                            for (Object elementObj : (JSONArray) modelModule) {
-                                JSONObject element = (JSONObject) elementObj;
-                                modelPaths.add((String) element.get("model"));
+
+                        if (modelModule instanceof JsonArray) {
+                            dLog("Model module is JsonArray");
+                            for (Object elementObj : (JsonArray) modelModule) {
+                                JsonObject element = (JsonObject) elementObj;
+                                modelPaths.add(element.get("model").getAsString());
                             }
                         } else {
-                            dLog("Model module is JSONObject");
-                            modelPaths.add((String) ((JSONObject) modelModule).get("model"));
+                            dLog("Model module is JsonObject");
+                            modelPaths.add(((JsonObject) modelModule).get("model").getAsString());
                         }
+
+                    } else {
+                        dLog("Key part is 'lit=false'");
                     }
                 }
 
             } else if (keys.contains("multipart")) {
                 dLog("Blockstate type: 'multipart'");
-                JSONArray multipart = (JSONArray) blockstateData.get("multipart");
+                JsonArray multipart = (JsonArray) blockstateData.get("multipart");
+
                 for (Object partObj : multipart) {
-                    JSONObject part = (JSONObject) partObj;
+                    JsonObject part = (JsonObject) partObj;
                     Object apply = part.get("apply");
-                    if (apply instanceof JSONArray) {
+                    if (apply instanceof JsonArray) {
                         dLog("Apply is JSONArray");
-                        for (Object elementObj : (JSONArray) apply) {
-                            JSONObject element = (JSONObject) elementObj;
-                            modelPaths.add((String) element.get("model"));
+                        for (Object elementObj : (JsonArray) apply) {
+                            JsonObject element = (JsonObject) elementObj;
+                            modelPaths.add(element.get("model").getAsString());
                         }
                     } else {
                         dLog("Apply is JSONObject");
-                        modelPaths.add((String) ((JSONObject) apply).get("model"));
+                        modelPaths.add(((JsonObject) apply).get("model").getAsString());
                     }
                 }
+
             } else {
-                LOGGER.error("Blockstate JSON for '" + blockId + "' in mod '" + modId + "' does not contain 'variants' nor 'multipart'!");
+                LOGGER.error("Blockstate JSON for '{}' in mod '{}' does not contain 'variants' nor 'multipart'!", blockId, modId);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -211,17 +214,7 @@ public class AutomaticSupport {
         dLog("Model paths: " + modelPaths);
 
         // Convert minecraft paths to real relative paths
-        Set<String> realModelPaths = new HashSet<>();
-        for (String modelPath : modelPaths) {
-            if (modelPath.startsWith("block/")) {
-                realModelPaths.add("assets/minecraft/models/" + modelPath + ".json");
-            } else {
-                String[] modelPathParts = modelPath.split(":");
-                String modIdPart = modelPathParts[0];
-                String modelPathPart = modelPathParts[1];
-                realModelPaths.add("assets/" + modIdPart + "/models/" + modelPathPart + ".json");
-            }
-        }
+        Set<String> realModelPaths = generateRelativePaths(modelPaths);
 
         dLog("Real model paths: " + realModelPaths);
 
@@ -232,14 +225,17 @@ public class AutomaticSupport {
             Path modelPath = Paths.get(gameDirPath + "/config/shimmer/compatibility/temp/" + realModelPath);
             dLog("Model path: " + modelPath);
             try (FileReader reader = new FileReader(String.valueOf(modelPath))) {
-                JSONObject modelData = new JSONObject(new JSONTokener(reader));
+                Gson gson = new Gson();
+                JsonObject modelData = gson.fromJson(reader, JsonObject.class);
+
                 dLog("Model JSON: " + modelData);
+
                 if (modelData.keySet().contains("textures")) {
-                    JSONObject textures = (JSONObject) modelData.get("textures");
+                    JsonObject textures = (JsonObject) modelData.get("textures");
                     Set<String> textureKeys = textures.keySet();
                     dLog("Texture keys: " + textureKeys);
                     for (String textureKey : textureKeys) {
-                        String texturePath = (String) textures.get(textureKey);
+                        String texturePath = textures.get(textureKey).getAsString();
 
                         // Convert minecraft paths to real relative paths while adding them to the texturePaths set
                         if (texturePath.startsWith("block/")) {
@@ -251,13 +247,12 @@ public class AutomaticSupport {
                                 String texturePathPart = texturePathParts[1];
                                 texturePaths.add("assets/" + modIdPart + "/textures/" + texturePathPart + ".png");
                             } catch (ArrayIndexOutOfBoundsException e) {
-                                LOGGER.warn("Unsplittable texture path: " + texturePath);
+                                LOGGER.warn("Unsplittable texture path: {}", texturePath);
                             }
                         }
                     }
                 } else {
-                    LOGGER.warn("Model JSON for '" + blockId + "' in mod '" + modId + "' does not contain 'textures'!\n" +
-                            "SSL currently does not support models inheriting textures from parent model.");
+                    LOGGER.warn("Model JSON for '{}' in mod '{}' does not contain 'textures'!\nSSL currently does not support models inheriting textures from parent model.", blockId, modId);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -266,6 +261,21 @@ public class AutomaticSupport {
 
         dLog("Texture paths: " + texturePaths);
         return extractColorFromTextures(texturePaths);
+    }
+
+    private static @NotNull Set<String> generateRelativePaths(Set<String> modelPaths) {
+        Set<String> realModelPaths = new HashSet<>();
+        for (String modelPath : modelPaths) {
+            if (modelPath.startsWith("block/")) {
+                realModelPaths.add("assets/minecraft/models/" + modelPath + ".json");
+            } else {
+                String[] modelPathParts = modelPath.split(":");
+                String modIdPart = modelPathParts[0];
+                String modelPathPart = modelPathParts[1];
+                realModelPaths.add("assets/" + modIdPart + "/models/" + modelPathPart + ".json");
+            }
+        }
+        return realModelPaths;
     }
 
     private static int[] extractColorFromTextures(Set<String> texturePaths) {
@@ -342,15 +352,14 @@ public class AutomaticSupport {
         }
 
         if (total_weight == 0) {
-            LOGGER.warn("Total weight is 0 for texture paths: " + texturePaths);
+            LOGGER.warn("Total weight is 0 for texture paths: {}", texturePaths);
         }
 
-        int[] averageColor = {
+        return new int[] {
                 (int) Math.round(r_sum * 255 / total_weight),
                 (int) Math.round(g_sum * 255 / total_weight),
                 (int) Math.round(b_sum * 255 / total_weight)
         };
-        return averageColor;
     }
 
     private static void dLog(String message) {

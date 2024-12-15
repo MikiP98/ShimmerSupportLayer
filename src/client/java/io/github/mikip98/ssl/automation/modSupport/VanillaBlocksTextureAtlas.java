@@ -1,9 +1,9 @@
-package io.github.mikip98.automation.modSupport;
+package io.github.mikip98.ssl.automation.modSupport;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.mikip98.ShimmerSupportLayerClient.LOGGER;
+import static io.github.mikip98.ssl.ShimmerSupportLayerClient.LOGGER;
 
 public class VanillaBlocksTextureAtlas {
     private static final Map<String, double[]> BLOCK = new HashMap<>();
@@ -961,7 +961,7 @@ public class VanillaBlocksTextureAtlas {
                     return BLOCK.get(name);
                 }
                 else {
-                    LOGGER.warn("Unsupported block: " + name);
+                    LOGGER.warn("Unsupported block: {}", name);
                 }
                 break;
             case "blocks":
@@ -970,11 +970,11 @@ public class VanillaBlocksTextureAtlas {
                     return BLOCKS.get(name);
                 }
                 else {
-                    LOGGER.warn("Unsupported block: " + name);
+                    LOGGER.warn("Unsupported block: {}", name);
                 }
                 break;
             default:
-                LOGGER.warn("Unsupported texture type: " + type);
+                LOGGER.warn("Unsupported texture type: {}", type);
         }
 //        LOGGER.info("Returning: " + Arrays.toString(new double[]{0, 0, 0, 0}) + ", from: DEFAULT, name: " + name);
         return new double[]{0, 0, 0, 0};

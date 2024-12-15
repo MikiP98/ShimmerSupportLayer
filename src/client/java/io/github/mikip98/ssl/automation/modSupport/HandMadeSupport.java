@@ -1,6 +1,6 @@
-package io.github.mikip98.automation.modSupport;
+package io.github.mikip98.ssl.automation.modSupport;
 
-import io.github.mikip98.automation.structures.SupportedMod;
+import io.github.mikip98.ssl.automation.structures.SupportedMod;
 
 import java.util.ArrayList;
 
